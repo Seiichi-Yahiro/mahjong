@@ -1,0 +1,14 @@
+[package]
+name = "mahjong"
+version = "0.1.0"
+authors = ["Julian Viechter <jviechter@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[dependencies.bevy]
+version = "0.4.0"
+features = ["dynamic"]
