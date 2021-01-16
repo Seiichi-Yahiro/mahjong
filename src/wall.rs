@@ -69,7 +69,7 @@ pub fn split_dead_wall_system(
 }
 
 fn calculate_dead_wall_range(dice: usize) -> Range<usize> {
-    let side_offset = ((dice - 1) % 4) * TILES_PER_SIDE;
+    let side_offset = ((5 - dice % 4) % 4) * TILES_PER_SIDE;
     let end_dead_wall_index = side_offset + dice * STACK_SIZE;
     let begin_dead_wall_index =
         (end_dead_wall_index + TOTAL_TILES - STACKS_IN_DEAD_WALL * STACK_SIZE) % TOTAL_TILES;
@@ -89,8 +89,8 @@ mod tests {
     }
 
     #[test]
-    fn dead_wall_range_from_highest_dice() {
-        let range = calculate_dead_wall_range(12);
-        assert_eq!(112..126, range);
+    fn dead_wall_range_ccw() {
+        let range = calculate_dead_wall_range(2);
+        assert_eq!(92..106, range);
     }
 }
