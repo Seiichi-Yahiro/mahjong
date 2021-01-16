@@ -23,17 +23,23 @@ fn main() {
         .add_stage_after(
             stage::UPDATE,
             "game_state",
-            StateStage::<GameState>::default(),
-        )
-        .on_state_update(
-            "game_state",
-            GameState::Loading,
-            tiles::create_materials_system.system(),
-        )
-        .on_state_exit(
-            "game_state",
-            GameState::Loading,
-            wall::build_wall_system.system(),
+            StateStage::<GameState>::default()
+                .with_update_stage(
+                    GameState::Loading,
+                    SystemStage::single(tiles::create_materials_system.system()),
+                )
+                .with_exit_stage(
+                    GameState::Loading,
+                    Schedule::default()
+                        .with_stage(
+                            "build_wall",
+                            SystemStage::single(wall::build_wall_system.system()),
+                        )
+                        .with_stage(
+                            "split_dead_wall",
+                            SystemStage::single(wall::split_dead_wall_system.system()),
+                        ),
+                ),
         )
         .add_startup_system(setup.system())
         .run();
