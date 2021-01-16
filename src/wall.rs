@@ -1,8 +1,8 @@
 use crate::tiles::{Tile, TileAssetData};
 use bevy::prelude::*;
 
-const TILE_LENGTH: usize = 17;
-const TILES_PER_SIDE: usize = TILE_LENGTH * 2;
+const SIDE_LENGTH: usize = 17;
+const TILES_PER_SIDE: usize = SIDE_LENGTH * 2;
 
 pub fn build_wall_system(commands: &mut Commands, tile_asset_data: Res<TileAssetData>) {
     Tile::new_set(false)
@@ -17,10 +17,10 @@ pub fn build_wall_system(commands: &mut Commands, tile_asset_data: Res<TileAsset
 }
 
 fn calculate_wall_transform_from_index(index: usize) -> Transform {
-    let half_wall_length = (TILE_LENGTH as f32 / 2.0) * TileAssetData::WIDTH;
+    let half_wall_length = (SIDE_LENGTH as f32 / 2.0) * TileAssetData::WIDTH;
     let z = half_wall_length + TileAssetData::WIDTH;
 
-    let x_index = TILE_LENGTH - (index % TILES_PER_SIDE) / 2;
+    let x_index = SIDE_LENGTH - (index % TILES_PER_SIDE) / 2;
     let x = x_index as f32 * TileAssetData::WIDTH - TileAssetData::WIDTH / 2.0 - half_wall_length;
 
     let y_index = (index + 1) % 2;
