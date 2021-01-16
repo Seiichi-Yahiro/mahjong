@@ -1,5 +1,6 @@
 use crate::tiles::{Tile, TileAssetData};
 use bevy::prelude::*;
+use rand::prelude::SliceRandom;
 use rand::Rng;
 use std::ops::Range;
 
@@ -16,19 +17,19 @@ pub struct LiveWall;
 pub struct DeadWall;
 
 pub fn build_wall_system(commands: &mut Commands, tile_asset_data: Res<TileAssetData>) {
-    Tile::new_set(false)
-        .into_iter()
-        .enumerate()
-        .for_each(|(index, tile)| {
-            let transform = calculate_wall_transform_from_index(index);
-            let rotation = Transform::from_rotation(Quat::from_rotation_x(std::f32::consts::PI));
-            let pbr = tile_asset_data.new_pbr(tile, transform * rotation);
-            commands
-                .spawn(pbr)
-                .with(Index(index))
-                .with(Wall)
-                .with(LiveWall);
-        });
+    let mut tiles = Tile::new_set(false);
+    tiles.shuffle(&mut rand::thread_rng());
+
+    tiles.into_iter().enumerate().for_each(|(index, tile)| {
+        let transform = calculate_wall_transform_from_index(index);
+        let rotation = Transform::from_rotation(Quat::from_rotation_x(std::f32::consts::PI));
+        let pbr = tile_asset_data.new_pbr(tile, transform * rotation);
+        commands
+            .spawn(pbr)
+            .with(Index(index))
+            .with(Wall)
+            .with(LiveWall);
+    });
 }
 
 fn calculate_wall_transform_from_index(index: usize) -> Transform {
