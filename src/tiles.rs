@@ -35,7 +35,7 @@ impl Tile {
         let winds = [Wind::East, Wind::South, Wind::West, Wind::North]
             .iter()
             .map(|wind| Honor::Wind(*wind));
-        let dragons = [Dragon::Red, Dragon::White, Dragon::Green]
+        let dragons = [Dragon::White, Dragon::Green, Dragon::Red]
             .iter()
             .map(|dragon| Honor::Dragon(*dragon));
         let honors = winds.chain(dragons).map(|honor| Tile::Honor(honor));
@@ -141,9 +141,9 @@ pub enum Wind {
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Dragon {
-    Red,
     White,
     Green,
+    Red,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -238,9 +238,9 @@ pub fn load_tile_asset_data_system(commands: &mut Commands, asset_server: Res<As
         (Tile::Honor(Honor::Wind(Wind::South)), "winds/south"),
         (Tile::Honor(Honor::Wind(Wind::West)), "winds/west"),
         (Tile::Honor(Honor::Wind(Wind::North)), "winds/north"),
+        (Tile::Honor(Honor::Dragon(Dragon::White)), "dragons/white"),
         (Tile::Honor(Honor::Dragon(Dragon::Green)), "dragons/green"),
         (Tile::Honor(Honor::Dragon(Dragon::Red)), "dragons/red"),
-        (Tile::Honor(Honor::Dragon(Dragon::White)), "dragons/white"),
         (Tile::Bonus(Bonus::Season(Season::Spring)), "seasons/spring"),
         (Tile::Bonus(Bonus::Season(Season::Summer)), "seasons/summer"),
         (Tile::Bonus(Bonus::Season(Season::Fall)), "seasons/fall"),
