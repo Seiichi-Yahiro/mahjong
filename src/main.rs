@@ -1,3 +1,4 @@
+mod player;
 mod tiles;
 mod wall;
 
@@ -32,8 +33,10 @@ fn main() {
                     GameState::Loading,
                     Schedule::default()
                         .with_stage(
-                            "build_wall",
-                            SystemStage::single(wall::build_wall_system.system()),
+                            "setup_game",
+                            SystemStage::parallel()
+                                .with_system(player::setup_players_system.system())
+                                .with_system(wall::build_wall_system.system()),
                         )
                         .with_stage(
                             "split_dead_wall",
