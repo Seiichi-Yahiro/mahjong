@@ -110,7 +110,7 @@ pub enum Number {
 }
 
 impl Number {
-    fn iter() -> impl Iterator<Item = Self> {
+    pub fn iter() -> impl Iterator<Item = Self> {
         [
             Self::One,
             Self::Two,
@@ -179,7 +179,7 @@ pub enum Wind {
 }
 
 impl Wind {
-    fn iter() -> impl Iterator<Item = Self> {
+    pub fn iter() -> impl Iterator<Item = Self> {
         [Self::East, Self::South, Self::West, Self::North]
             .iter()
             .copied()
@@ -205,7 +205,7 @@ pub enum Dragon {
 }
 
 impl Dragon {
-    fn iter() -> impl Iterator<Item = Self> {
+    pub fn iter() -> impl Iterator<Item = Self> {
         [Self::White, Self::Green, Self::Red].iter().copied()
     }
 }
@@ -247,7 +247,7 @@ pub enum Season {
 }
 
 impl Season {
-    fn iter() -> impl Iterator<Item = Self> {
+    pub fn iter() -> impl Iterator<Item = Self> {
         [Self::Spring, Self::Summer, Self::Fall, Self::Winter]
             .iter()
             .copied()
@@ -263,7 +263,7 @@ pub enum Plant {
 }
 
 impl Plant {
-    fn iter() -> impl Iterator<Item = Self> {
+    pub fn iter() -> impl Iterator<Item = Self> {
         [Self::Plum, Self::Orchid, Self::Chrysanthemum, Self::Bamboo]
             .iter()
             .copied()
