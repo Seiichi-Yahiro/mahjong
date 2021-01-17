@@ -1,4 +1,5 @@
-use crate::tiles::{Tile, TileAssetData};
+use crate::player::Seat;
+use crate::tiles::{Tile, TileAssetData, Wind};
 use bevy::prelude::*;
 use rand::prelude::SliceRandom;
 use rand::Rng;
@@ -54,9 +55,21 @@ fn calculate_wall_transform_from_index(index: usize) -> Transform {
 pub fn split_dead_wall_system(
     commands: &mut Commands,
     wall_query: Query<(Entity, &Index), With<Wall>>,
+    wind_query: Query<(&Wind, &Seat)>,
 ) {
+    let seat = wind_query
+        .iter()
+        .find(|(wind, _)| **wind == Wind::East)
+        .map(|(_, seat)| *seat)
+        .unwrap_or_else(|| {
+            error!("Could not find player with east wind!");
+            Seat(Wind::East)
+        });
+
     let dice = rand::thread_rng().gen_range(2..=12);
-    let dead_wall_range = calculate_dead_wall_range(dice);
+    info!("Rolled {}.", dice);
+
+    let dead_wall_range = calculate_dead_wall_range(seat, dice);
 
     for (entity, Index(index)) in wall_query.iter() {
         if !dead_wall_range.contains(index) {
@@ -68,8 +81,18 @@ pub fn split_dead_wall_system(
     }
 }
 
-fn calculate_dead_wall_range(dice: usize) -> Range<usize> {
-    let side_offset = ((5 - dice % 4) % 4) * TILES_PER_SIDE;
+fn seat_to_side(Seat(wind): Seat) -> usize {
+    match wind {
+        Wind::East => 1,
+        Wind::South => 0,
+        Wind::West => 3,
+        Wind::North => 2,
+    }
+}
+
+fn calculate_dead_wall_range(seat: Seat, dice: usize) -> Range<usize> {
+    let start_side = seat_to_side(seat);
+    let side_offset = (((4 + start_side) - (dice - 1) % 4) % 4) * TILES_PER_SIDE;
     let end_dead_wall_index = side_offset + dice * STACK_SIZE;
     let begin_dead_wall_index =
         (end_dead_wall_index + TOTAL_TILES - STACKS_IN_DEAD_WALL * STACK_SIZE) % TOTAL_TILES;
@@ -83,14 +106,14 @@ mod tests {
 
     #[test]
     fn dead_wall_range_from_negative_wrap() {
-        let range = calculate_dead_wall_range(5);
+        let range = calculate_dead_wall_range(Seat(Wind::South), 5);
         // range.contains works also with start > end
         assert_eq!(132..10, range);
     }
 
     #[test]
     fn dead_wall_range_ccw() {
-        let range = calculate_dead_wall_range(2);
-        assert_eq!(92..106, range);
+        let range = calculate_dead_wall_range(Seat(Wind::North), 12);
+        assert_eq!(112..126, range);
     }
 }
