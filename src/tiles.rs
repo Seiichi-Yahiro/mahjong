@@ -3,6 +3,10 @@ use bevy::ecs::bevy_utils::HashMap;
 use bevy::prelude::*;
 use bevy::utils::AHashExt;
 
+pub trait EnumIter {
+    fn next(self) -> Self;
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Tile {
     Suit(Suit),
@@ -12,49 +16,21 @@ pub enum Tile {
 
 impl Tile {
     pub fn new_set(with_bonus: bool) -> Vec<Self> {
-        let numbers = [
-            Number::One,
-            Number::Two,
-            Number::Three,
-            Number::Four,
-            Number::Five,
-            Number::Six,
-            Number::Seven,
-            Number::Eight,
-            Number::Nine,
-        ];
+        let dots = Number::iter().map(|num| Suit::Dot(num));
+        let bamboos = Number::iter().map(|num| Suit::Bamboo(num));
+        let chars = Number::iter().map(|num| Suit::Char(num));
+        let suits = dots.chain(bamboos).chain(chars).map(Tile::from);
 
-        let dots = numbers.iter().map(|num| Suit::Dot(*num));
-        let bamboos = numbers.iter().map(|num| Suit::Bamboo(*num));
-        let chars = numbers.iter().map(|num| Suit::Char(*num));
-        let suits = dots
-            .chain(bamboos)
-            .chain(chars)
-            .map(|suit| Tile::Suit(suit));
-
-        let winds = [Wind::East, Wind::South, Wind::West, Wind::North]
-            .iter()
-            .map(|wind| Honor::Wind(*wind));
-        let dragons = [Dragon::White, Dragon::Green, Dragon::Red]
-            .iter()
-            .map(|dragon| Honor::Dragon(*dragon));
-        let honors = winds.chain(dragons).map(|honor| Tile::Honor(honor));
+        let winds = Wind::iter().map(Honor::from);
+        let dragons = Dragon::iter().map(Honor::from);
+        let honors = winds.chain(dragons).map(Tile::from);
 
         let mut tiles = suits.chain(honors).collect::<Vec<Self>>().repeat(4);
 
         if with_bonus {
-            let seasons = [Season::Spring, Season::Summer, Season::Fall, Season::Winter]
-                .iter()
-                .map(|season| Bonus::Season(*season));
-            let plants = [
-                Plant::Plum,
-                Plant::Orchid,
-                Plant::Chrysanthemum,
-                Plant::Bamboo,
-            ]
-            .iter()
-            .map(|plant| Bonus::Plant(*plant));
-            let bonus = seasons.chain(plants).map(|bonus| Tile::Bonus(bonus));
+            let seasons = Season::iter().map(Bonus::from);
+            let plants = Plant::iter().map(Bonus::from);
+            let bonus = seasons.chain(plants).map(Tile::from);
 
             tiles.extend(bonus);
         }
@@ -93,11 +69,31 @@ impl From<Dragon> for Tile {
     }
 }
 
+impl EnumIter for Tile {
+    fn next(self) -> Self {
+        match self {
+            Self::Suit(tile) => Self::Suit(tile.next()),
+            Self::Honor(tile) => Self::Honor(tile.next()),
+            tile => tile,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Suit {
     Dot(Number),
     Bamboo(Number),
     Char(Number),
+}
+
+impl EnumIter for Suit {
+    fn next(self) -> Self {
+        match self {
+            Self::Dot(number) => Self::Dot(number.next()),
+            Self::Bamboo(number) => Self::Bamboo(number.next()),
+            Self::Char(number) => Self::Char(number.next()),
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -111,6 +107,40 @@ pub enum Number {
     Seven,
     Eight,
     Nine,
+}
+
+impl Number {
+    fn iter() -> impl Iterator<Item = Self> {
+        [
+            Self::One,
+            Self::Two,
+            Self::Three,
+            Self::Four,
+            Self::Five,
+            Self::Six,
+            Self::Seven,
+            Self::Eight,
+            Self::Nine,
+        ]
+        .iter()
+        .copied()
+    }
+}
+
+impl EnumIter for Number {
+    fn next(self) -> Self {
+        match self {
+            Self::One => Self::Two,
+            Self::Two => Self::Three,
+            Self::Three => Self::Four,
+            Self::Four => Self::Five,
+            Self::Five => Self::Six,
+            Self::Six => Self::Seven,
+            Self::Seven => Self::Eight,
+            Self::Eight => Self::Nine,
+            Self::Nine => Self::One,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -131,6 +161,15 @@ impl From<Dragon> for Honor {
     }
 }
 
+impl EnumIter for Honor {
+    fn next(self) -> Self {
+        match self {
+            Self::Wind(honor) => Self::Wind(honor.next()),
+            Self::Dragon(honor) => Self::Dragon(honor.next()),
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Wind {
     East,
@@ -139,11 +178,46 @@ pub enum Wind {
     North,
 }
 
+impl Wind {
+    fn iter() -> impl Iterator<Item = Self> {
+        [Self::East, Self::South, Self::West, Self::North]
+            .iter()
+            .copied()
+    }
+}
+
+impl EnumIter for Wind {
+    fn next(self) -> Self {
+        match self {
+            Self::East => Self::South,
+            Self::South => Self::West,
+            Self::West => Self::North,
+            Self::North => Self::East,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Dragon {
     White,
     Green,
     Red,
+}
+
+impl Dragon {
+    fn iter() -> impl Iterator<Item = Self> {
+        [Self::White, Self::Green, Self::Red].iter().copied()
+    }
+}
+
+impl EnumIter for Dragon {
+    fn next(self) -> Self {
+        match self {
+            Self::White => Self::Green,
+            Self::Green => Self::Red,
+            Self::Red => Self::White,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -172,12 +246,28 @@ pub enum Season {
     Winter,
 }
 
+impl Season {
+    fn iter() -> impl Iterator<Item = Self> {
+        [Self::Spring, Self::Summer, Self::Fall, Self::Winter]
+            .iter()
+            .copied()
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Plant {
     Plum,
     Orchid,
     Chrysanthemum,
     Bamboo,
+}
+
+impl Plant {
+    fn iter() -> impl Iterator<Item = Self> {
+        [Self::Plum, Self::Orchid, Self::Chrysanthemum, Self::Bamboo]
+            .iter()
+            .copied()
+    }
 }
 
 pub struct TileAssetData {
