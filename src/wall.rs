@@ -1,4 +1,4 @@
-use crate::player::Seat;
+use crate::player::{Dealer, Seat};
 use crate::tiles::{Tile, TileAssetData, Wind};
 use bevy::prelude::*;
 use rand::prelude::SliceRandom;
@@ -55,16 +55,13 @@ fn calculate_wall_transform_from_index(index: usize) -> Transform {
 pub fn split_dead_wall_system(
     commands: &mut Commands,
     wall_query: Query<(Entity, &Index), With<Wall>>,
-    wind_query: Query<(&Wind, &Seat)>,
+    dealer_query: Query<&Seat, With<Dealer>>,
 ) {
-    let seat = wind_query
+    let seat = dealer_query
         .iter()
-        .find(|(wind, _)| **wind == Wind::East)
-        .map(|(_, seat)| *seat)
-        .unwrap_or_else(|| {
-            error!("Could not find player with east wind!");
-            Seat(Wind::East)
-        });
+        .next()
+        .cloned()
+        .expect("Could not find Dealer!");
 
     let dice = rand::thread_rng().gen_range(2..=12);
     info!("Rolled {}.", dice);
