@@ -1,36 +1,85 @@
-use crate::player::{Dealer, Seat};
+use crate::player::Players;
 use crate::tiles::{Tile, TileAssetData, Wind};
 use bevy::prelude::*;
 use rand::prelude::SliceRandom;
 use rand::Rng;
-use std::ops::Range;
+use std::collections::VecDeque;
 
 const STACK_SIZE: usize = 2;
 const STACKS_PER_SIDE: usize = 17;
 const TILES_PER_SIDE: usize = STACKS_PER_SIDE * 2;
 const TOTAL_TILES: usize = TILES_PER_SIDE * 4;
 
-const STACKS_IN_DEAD_WALL: usize = 7;
+const TILES_IN_DEAD_WALL: usize = 7 * STACK_SIZE;
 
-pub struct Index(pub usize);
-pub struct Wall;
-pub struct LiveWall;
-pub struct DeadWall;
+#[derive(Debug)]
+struct TileEntity {
+    tile: Tile,
+    entity: Entity,
+}
 
-pub fn build_wall_system(commands: &mut Commands, tile_asset_data: Res<TileAssetData>) {
-    let mut tiles = Tile::new_set(false);
-    tiles.shuffle(&mut rand::thread_rng());
+pub struct Wall {
+    living_tiles: VecDeque<TileEntity>,
+    kan_tiles: Vec<TileEntity>,
+    dora_tiles: Vec<TileEntity>,
+    rest: Vec<TileEntity>,
+}
 
-    tiles.into_iter().enumerate().for_each(|(index, tile)| {
-        let transform = calculate_wall_transform_from_index(index);
-        let rotation = Transform::from_rotation(Quat::from_rotation_x(std::f32::consts::PI));
-        let pbr = tile_asset_data.new_pbr(tile, transform * rotation);
-        commands
-            .spawn(pbr)
-            .with(Index(index))
-            .with(Wall)
-            .with(LiveWall);
-    });
+pub fn build_wall_system(
+    commands: &mut Commands,
+    players: Res<Players>,
+    tile_asset_data: Res<TileAssetData>,
+) {
+    let mut living_tiles: VecDeque<TileEntity> = {
+        let mut tiles = Tile::new_set(false);
+        tiles.shuffle(&mut rand::thread_rng());
+
+        let living_offset = calculate_living_tiles_offset(players.dealer().seat);
+
+        tiles
+            .into_iter()
+            .enumerate()
+            .map(|(index, tile)| {
+                let transform = calculate_wall_transform_from_index(
+                    TOTAL_TILES + index + living_offset - TILES_IN_DEAD_WALL,
+                );
+                let pbr = tile_asset_data.new_pbr(tile, transform);
+
+                let entity = commands.spawn(pbr).with(tile).current_entity().unwrap();
+
+                TileEntity { tile, entity }
+            })
+            .collect()
+    };
+
+    let rest = living_tiles.drain(0..1 * STACK_SIZE).rev().collect();
+
+    let dora_tiles = {
+        let mut dora_tiles = living_tiles.drain(0..4 * STACK_SIZE).rev().collect();
+        swap_neighbors(&mut dora_tiles);
+        dora_tiles
+    };
+
+    let kan_tiles = {
+        let mut kan_tiles = living_tiles.drain(0..2 * STACK_SIZE).rev().collect();
+        swap_neighbors(&mut kan_tiles);
+        kan_tiles
+    };
+
+    let wall = Wall {
+        living_tiles,
+        kan_tiles,
+        dora_tiles,
+        rest,
+    };
+
+    commands.insert_resource(wall);
+}
+
+fn swap_neighbors(v: &mut Vec<TileEntity>) {
+    for i in (0..v.len()).step_by(2) {
+        v.swap(i, i + 1);
+    }
 }
 
 fn calculate_wall_transform_from_index(index: usize) -> Transform {
@@ -52,65 +101,18 @@ fn calculate_wall_transform_from_index(index: usize) -> Transform {
     rotation * translation
 }
 
-pub fn split_dead_wall_system(
-    commands: &mut Commands,
-    wall_query: Query<(Entity, &Index), With<Wall>>,
-    dealer_query: Query<&Seat, With<Dealer>>,
-) {
-    let seat = dealer_query
-        .iter()
-        .next()
-        .cloned()
-        .expect("Could not find Dealer!");
-
+fn calculate_living_tiles_offset(seat: Wind) -> usize {
     let dice = rand::thread_rng().gen_range(2..=12);
-    info!("Rolled {}.", dice);
+    info!("Rolled: {:?}!", dice);
 
-    let dead_wall_range = calculate_dead_wall_range(seat, dice);
-
-    for (entity, Index(index)) in wall_query.iter() {
-        if !dead_wall_range.contains(index) {
-            continue;
-        }
-
-        commands.remove_one::<LiveWall>(entity);
-        commands.insert_one(entity, DeadWall);
-    }
-}
-
-fn seat_to_side(Seat(wind): Seat) -> usize {
-    match wind {
+    let side = match seat {
         Wind::East => 1,
         Wind::South => 0,
         Wind::West => 3,
         Wind::North => 2,
-    }
-}
+    };
 
-fn calculate_dead_wall_range(seat: Seat, dice: usize) -> Range<usize> {
-    let start_side = seat_to_side(seat);
-    let side_offset = (((4 + start_side) - (dice - 1) % 4) % 4) * TILES_PER_SIDE;
-    let end_dead_wall_index = side_offset + dice * STACK_SIZE;
-    let begin_dead_wall_index =
-        (end_dead_wall_index + TOTAL_TILES - STACKS_IN_DEAD_WALL * STACK_SIZE) % TOTAL_TILES;
+    let side_offset = (((4 + side) - (dice - 1) % 4) % 4) * TILES_PER_SIDE;
 
-    begin_dead_wall_index..end_dead_wall_index
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn dead_wall_range_from_negative_wrap() {
-        let range = calculate_dead_wall_range(Seat(Wind::South), 5);
-        // range.contains works also with start > end
-        assert_eq!(132..10, range);
-    }
-
-    #[test]
-    fn dead_wall_range_ccw() {
-        let range = calculate_dead_wall_range(Seat(Wind::North), 12);
-        assert_eq!(112..126, range);
-    }
+    side_offset + dice * STACK_SIZE
 }

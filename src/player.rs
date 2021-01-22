@@ -1,6 +1,6 @@
-use crate::tiles::{EnumIter, Wind};
+use crate::tiles::Wind;
 use bevy::prelude::*;
-use rand::prelude::IteratorRandom;
+use rand::Rng;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum PlayerType {
@@ -8,38 +8,69 @@ pub enum PlayerType {
     Ai,
 }
 
-#[derive(Debug, Copy, Clone)]
-pub struct Points(i32);
+#[derive(Debug)]
+pub struct Player {
+    pub r#type: PlayerType,
+    pub seat: Wind,
+    pub wind: Wind,
+    pub points: i32,
+}
 
-impl Points {
-    pub fn new() -> Self {
-        Self(25_000)
+impl Player {
+    pub fn new(seat: Wind, wind: Wind, r#type: PlayerType) -> Self {
+        Self {
+            seat,
+            wind,
+            r#type,
+            points: 25_000,
+        }
     }
 }
 
-#[derive(Debug, Copy, Clone)]
-pub struct Seat(pub Wind);
+#[derive(Debug)]
+pub struct Players {
+    players: Vec<Player>,
+    current: usize,
+    dealer: usize,
+}
 
-#[derive(Debug, Copy, Clone)]
-pub struct Dealer;
+impl Players {
+    pub fn new() -> Self {
+        let wind = Wind::iter()
+            .cycle()
+            .skip(rand::thread_rng().gen_range(0..4));
 
-pub fn setup_players_system(commands: &mut Commands) {
-    let mut wind = Wind::iter().choose(&mut rand::thread_rng()).unwrap();
+        let players: Vec<Player> = Wind::iter()
+            .zip(wind)
+            .map(|(seat, wind)| {
+                let player_type = if seat == Wind::South {
+                    PlayerType::Human
+                } else {
+                    PlayerType::Ai
+                };
 
-    for seat in Wind::iter() {
-        let player_type = if seat == Wind::South {
-            PlayerType::Human
-        } else {
-            PlayerType::Ai
-        };
+                Player::new(seat, wind, player_type)
+            })
+            .collect();
 
-        wind = wind.next();
+        let dealer = players
+            .iter()
+            .enumerate()
+            .find(|(_, player)| player.wind == Wind::East)
+            .map(|(index, player)| {
+                info!("Dealer sits {:?}.", player.seat);
+                index
+            })
+            .unwrap();
 
-        let current_entity = commands.spawn((Seat(seat), wind, Points::new(), player_type));
-
-        if wind == Wind::East {
-            info!("{:?} got assigned as Dealer!", seat);
-            current_entity.with(Dealer);
+        Self {
+            players,
+            dealer,
+            current: dealer,
         }
+    }
+
+    pub fn dealer(&self) -> &Player {
+        &self.players[self.dealer]
     }
 }

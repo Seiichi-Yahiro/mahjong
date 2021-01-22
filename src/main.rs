@@ -2,6 +2,7 @@ mod player;
 mod tiles;
 mod wall;
 
+use crate::player::Players;
 use bevy::prelude::*;
 use bevy::render::camera::PerspectiveProjection;
 
@@ -19,6 +20,7 @@ fn main() {
         })
         .add_resource(Msaa { samples: 8 })
         .add_plugins(DefaultPlugins)
+        .add_resource(Players::new())
         .add_resource(State::new(GameState::Loading))
         .add_startup_system(tiles::load_tile_asset_data_system.system())
         .add_stage_after(
@@ -31,17 +33,10 @@ fn main() {
                 )
                 .with_exit_stage(
                     GameState::Loading,
-                    Schedule::default()
-                        .with_stage(
-                            "setup_game",
-                            SystemStage::parallel()
-                                .with_system(player::setup_players_system.system())
-                                .with_system(wall::build_wall_system.system()),
-                        )
-                        .with_stage(
-                            "split_dead_wall",
-                            SystemStage::single(wall::split_dead_wall_system.system()),
-                        ),
+                    Schedule::default().with_stage(
+                        "setup_game",
+                        SystemStage::parallel().with_system(wall::build_wall_system.system()),
+                    ),
                 ),
         )
         .add_startup_system(setup.system())
