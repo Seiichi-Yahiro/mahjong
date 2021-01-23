@@ -53,7 +53,11 @@ fn main() {
         .run();
 }
 
-fn setup(commands: &mut Commands) {
+fn setup(
+    commands: &mut Commands,
+    asset_server: Res<AssetServer>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     commands.spawn(Camera3dBundle {
         transform: Transform::from_translation(Vec3::new(0.0, 0.7, 0.7))
             .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::unit_y()),
@@ -67,6 +71,14 @@ fn setup(commands: &mut Commands) {
 
     commands.spawn(LightBundle {
         transform: Transform::from_translation(Vec3::new(0.0, 5.0, 4.0)),
+        ..Default::default()
+    });
+
+    commands.spawn(PbrBundle {
+        mesh: asset_server.load("mesh/table.gltf#Mesh0/Primitive0"),
+        material: materials.add(StandardMaterial::from(
+            asset_server.load("textures/table.png"),
+        )),
         ..Default::default()
     });
 }
