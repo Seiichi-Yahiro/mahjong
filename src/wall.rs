@@ -1,6 +1,7 @@
 use crate::player::Players;
 use crate::tiles::{Tile, TileAssetData, Wind};
 use bevy::prelude::*;
+use bevy_easings::{Ease, EaseFunction, EaseMethod, EasingChainComponent, EasingType};
 use rand::prelude::SliceRandom;
 use rand::Rng;
 use std::collections::VecDeque;
@@ -12,7 +13,7 @@ const TOTAL_TILES: usize = TILES_PER_SIDE * 4;
 
 const TILES_IN_DEAD_WALL: usize = 7 * STACK_SIZE;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 struct TileEntity {
     tile: Tile,
     entity: Entity,
@@ -20,9 +21,70 @@ struct TileEntity {
 
 pub struct Wall {
     living_tiles: VecDeque<TileEntity>,
-    kan_tiles: Vec<TileEntity>,
-    dora_tiles: Vec<TileEntity>,
     rest: Vec<TileEntity>,
+}
+
+pub struct Kans {
+    tiles: Vec<TileEntity>,
+}
+
+impl Kans {
+    fn new(tiles: Vec<TileEntity>) -> Self {
+        Self { tiles }
+    }
+}
+
+pub struct RevealDora;
+pub struct DoraTile;
+
+pub struct Doras {
+    tiles: Vec<TileEntity>,
+    revealed: usize,
+}
+
+impl Doras {
+    fn new(tiles: Vec<TileEntity>) -> Self {
+        Self { revealed: 0, tiles }
+    }
+
+    fn reveal_dora(&mut self) -> Result<TileEntity, &'static str> {
+        if self.revealed == 4 {
+            Err("Already revealed 4 dora tiles!")
+        } else {
+            self.revealed += 1;
+            Ok(self.tiles[(self.revealed - 1) * 2])
+        }
+    }
+
+    pub fn reveal_system(
+        commands: &mut Commands,
+        mut doras: ResMut<Doras>,
+        events: Query<Entity, With<RevealDora>>,
+        dora_query: Query<(Entity, &Transform), With<DoraTile>>,
+    ) {
+        for entity in events.iter() {
+            match doras.reveal_dora() {
+                Ok(tile_entity) => {
+                    match dora_query
+                        .iter()
+                        .find(|(entity, _)| *entity == tile_entity.entity)
+                    {
+                        None => {
+                            error!("Could not find dora tile to reveal!")
+                        }
+                        Some((entity, transform)) => {
+                            let flip_animation = calculate_tile_flip_animation(*transform);
+                            commands.insert_one(entity, flip_animation);
+                        }
+                    }
+                }
+                Err(err) => {
+                    warn!("{}", err)
+                }
+            }
+            commands.despawn(entity);
+        }
+    }
 }
 
 pub fn build_wall_system(
@@ -43,7 +105,10 @@ pub fn build_wall_system(
                 let transform = calculate_wall_transform_from_index(
                     TOTAL_TILES + index + living_offset - TILES_IN_DEAD_WALL,
                 );
-                let pbr = tile_asset_data.new_pbr(tile, transform);
+                let rotation =
+                    Transform::from_rotation(Quat::from_rotation_x(std::f32::consts::PI));
+
+                let pbr = tile_asset_data.new_pbr(tile, transform * rotation);
 
                 let entity = commands.spawn(pbr).with(tile).current_entity().unwrap();
 
@@ -54,26 +119,30 @@ pub fn build_wall_system(
 
     let rest = living_tiles.drain(0..1 * STACK_SIZE).rev().collect();
 
-    let dora_tiles = {
+    let doras = {
         let mut dora_tiles = living_tiles.drain(0..4 * STACK_SIZE).rev().collect();
         swap_neighbors(&mut dora_tiles);
-        dora_tiles
+
+        dora_tiles.iter().for_each(|it| {
+            commands.insert_one(it.entity, DoraTile);
+        });
+
+        Doras::new(dora_tiles)
     };
 
-    let kan_tiles = {
+    let kans = {
         let mut kan_tiles = living_tiles.drain(0..2 * STACK_SIZE).rev().collect();
         swap_neighbors(&mut kan_tiles);
-        kan_tiles
+        Kans::new(kan_tiles)
     };
 
-    let wall = Wall {
-        living_tiles,
-        kan_tiles,
-        dora_tiles,
-        rest,
-    };
+    let wall = Wall { living_tiles, rest };
 
     commands.insert_resource(wall);
+    commands.insert_resource(doras);
+    commands.insert_resource(kans);
+
+    commands.spawn((RevealDora,));
 }
 
 fn swap_neighbors(v: &mut Vec<TileEntity>) {
@@ -115,4 +184,34 @@ fn calculate_living_tiles_offset(seat: Wind) -> usize {
     let side_offset = (((4 + side) - (dice - 1) % 4) % 4) * TILES_PER_SIDE;
 
     side_offset + dice * STACK_SIZE
+}
+
+fn calculate_tile_flip_animation(transform: Transform) -> EasingChainComponent<Transform> {
+    let transform_middle = Transform {
+        translation: Vec3::new(
+            0.0,
+            -(TileAssetData::DEPTH / 2.0 - TileAssetData::HEIGHT / 2.0),
+            0.0,
+        ),
+        rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2),
+        scale: Vec3::one(),
+    };
+
+    let transform_to = Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::PI));
+
+    transform
+        .ease_to(
+            transform * transform_middle,
+            EaseFunction::CircularOut,
+            EasingType::Once {
+                duration: std::time::Duration::from_millis(500),
+            },
+        )
+        .ease_to(
+            transform * transform_to,
+            EaseFunction::CircularIn,
+            EasingType::Once {
+                duration: std::time::Duration::from_millis(500),
+            },
+        )
 }

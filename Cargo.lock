@@ -363,6 +363,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_easings"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "587c3391f4ddf564c265b7502a98e325c6c11493c6923597d6144b41ea9da508"
+dependencies = [
+ "bevy",
+ "interpolation",
+ "rand 0.8.2",
+]
+
+[[package]]
 name = "bevy_ecs"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1968,6 +1979,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "interpolation"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3b7357d2bbc5ee92f8e899ab645233e43d21407573cceb37fed8bc3dede2c02"
+
+[[package]]
 name = "io-kit-sys"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2170,6 +2187,7 @@ name = "mahjong"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy_easings",
  "rand 0.8.2",
 ]
 

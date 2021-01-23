@@ -5,6 +5,7 @@ mod wall;
 use crate::player::Players;
 use bevy::prelude::*;
 use bevy::render::camera::PerspectiveProjection;
+use bevy_easings::EasingsPlugin;
 
 #[derive(Debug, Clone, Copy)]
 pub enum GameState {
@@ -20,6 +21,7 @@ fn main() {
         })
         .add_resource(Msaa { samples: 8 })
         .add_plugins(DefaultPlugins)
+        .add_plugin(EasingsPlugin)
         .add_resource(Players::new())
         .add_resource(State::new(GameState::Loading))
         .add_startup_system(tiles::load_tile_asset_data_system.system())
@@ -37,6 +39,10 @@ fn main() {
                         "setup_game",
                         SystemStage::parallel().with_system(wall::build_wall_system.system()),
                     ),
+                )
+                .with_update_stage(
+                    GameState::Play,
+                    SystemStage::parallel().with_system(wall::Doras::reveal_system.system()),
                 ),
         )
         .add_startup_system(setup.system())
