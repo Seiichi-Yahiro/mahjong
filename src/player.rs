@@ -1,5 +1,5 @@
 use crate::tiles::{TileAssetData, Wind};
-use crate::wall::{LiveTile, TileEntity, Wall, HALF_WALL_LENGTH};
+use crate::wall::{TileEntity, Wall, HALF_WALL_LENGTH};
 use bevy::prelude::*;
 use bevy_easings::{Ease, EaseFunction, EaseMethod, EasingChainComponent, EasingType};
 use rand::Rng;
@@ -110,9 +110,9 @@ impl Players {
         mut players: ResMut<Players>,
         mut wall: ResMut<Wall>,
         events: Query<(Entity, &DrawTiles)>,
-        tiles_query: Query<(Entity, &Transform), With<LiveTile>>,
+        transform_query: Query<&Transform>,
     ) {
-        for (entity, &DrawTiles(amount)) in events.iter() {
+        for (event, &DrawTiles(amount)) in events.iter() {
             let tiles = wall.draw(amount);
 
             let current_number_of_tiles = players.current_player().tiles.len();
@@ -121,21 +121,17 @@ impl Players {
             match players.current_player_mut().add_tiles(&tiles) {
                 Ok(_) => {
                     for (index, tile_entity) in tiles.iter().enumerate() {
-                        match tiles_query
-                            .iter()
-                            .find(|(entity, _)| *entity == tile_entity.entity)
-                        {
-                            None => {
-                                error!("Could not find drawn tile!")
-                            }
-                            Some((entity, transform)) => {
+                        match transform_query.get(tile_entity.entity) {
+                            Ok(transform) => {
                                 let animation = calculate_wall_to_hand_animation(
                                     index + current_number_of_tiles,
                                     current_seat,
                                     *transform,
                                 );
-                                commands.insert_one(entity, animation);
-                                commands.remove_one::<LiveTile>(entity);
+                                commands.insert_one(tile_entity.entity, animation);
+                            }
+                            Err(err) => {
+                                error!("Could not query tile because of {:?}!", err)
                             }
                         }
                     }
@@ -145,7 +141,7 @@ impl Players {
                 }
             }
 
-            commands.despawn(entity);
+            commands.despawn(event);
         }
     }
 }

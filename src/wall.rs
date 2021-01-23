@@ -21,8 +21,6 @@ pub struct TileEntity {
     pub entity: Entity,
 }
 
-pub struct LiveTile;
-
 pub struct Wall {
     living_tiles: VecDeque<TileEntity>,
     rest: Vec<TileEntity>,
@@ -45,7 +43,6 @@ impl Kans {
 }
 
 pub struct RevealDora;
-pub struct DoraTile;
 
 pub struct Doras {
     tiles: Vec<TileEntity>,
@@ -70,29 +67,24 @@ impl Doras {
         commands: &mut Commands,
         mut doras: ResMut<Doras>,
         events: Query<Entity, With<RevealDora>>,
-        dora_query: Query<(Entity, &Transform), With<DoraTile>>,
+        transform_query: Query<&Transform>,
     ) {
-        for entity in events.iter() {
+        for event in events.iter() {
             match doras.reveal_dora() {
-                Ok(tile_entity) => {
-                    match dora_query
-                        .iter()
-                        .find(|(entity, _)| *entity == tile_entity.entity)
-                    {
-                        None => {
-                            error!("Could not find dora tile to reveal!")
-                        }
-                        Some((entity, transform)) => {
-                            let flip_animation = calculate_tile_flip_animation(*transform);
-                            commands.insert_one(entity, flip_animation);
-                        }
+                Ok(tile_entity) => match transform_query.get(tile_entity.entity) {
+                    Ok(transform) => {
+                        let flip_animation = calculate_tile_flip_animation(*transform);
+                        commands.insert_one(tile_entity.entity, flip_animation);
                     }
-                }
+                    Err(err) => {
+                        error!("Could not query dora tile because of {:?}!", err)
+                    }
+                },
                 Err(err) => {
                     warn!("{}", err)
                 }
             }
-            commands.despawn(entity);
+            commands.despawn(event);
         }
     }
 }
@@ -132,11 +124,6 @@ pub fn build_wall_system(
     let doras = {
         let mut dora_tiles = living_tiles.drain(0..4 * STACK_SIZE).rev().collect();
         swap_neighbors(&mut dora_tiles);
-
-        dora_tiles.iter().for_each(|it| {
-            commands.insert_one(it.entity, DoraTile);
-        });
-
         Doras::new(dora_tiles)
     };
 
@@ -147,10 +134,6 @@ pub fn build_wall_system(
     };
 
     let wall = Wall { living_tiles, rest };
-
-    wall.living_tiles.iter().for_each(|it| {
-        commands.insert_one(it.entity, LiveTile);
-    });
 
     commands.insert_resource(wall);
     commands.insert_resource(doras);
