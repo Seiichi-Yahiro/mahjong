@@ -37,7 +37,9 @@ fn main() {
                     GameState::Loading,
                     Schedule::default().with_stage(
                         "setup_game",
-                        SystemStage::parallel().with_system(wall::build_wall_system.system()),
+                        SystemStage::parallel()
+                            .with_system(wall::build_wall_system.system())
+                            .with_system(player::draw_hand_system.system()),
                     ),
                 )
                 .with_update_stage(

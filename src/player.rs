@@ -101,6 +101,26 @@ impl Players {
         &mut self.players[self.current]
     }
 
+    pub fn player_by_ident(&self, ident: PlayerIdent) -> &Player {
+        self.players
+            .iter()
+            .find(|player| match ident {
+                PlayerIdent::Seat(seat) => player.seat == seat,
+                PlayerIdent::Wind(wind) => player.wind == wind,
+            })
+            .unwrap()
+    }
+
+    pub fn player_by_ident_mut(&mut self, ident: PlayerIdent) -> &mut Player {
+        self.players
+            .iter_mut()
+            .find(|player| match ident {
+                PlayerIdent::Seat(seat) => player.seat == seat,
+                PlayerIdent::Wind(wind) => player.wind == wind,
+            })
+            .unwrap()
+    }
+
     pub fn end_turn(&mut self) {
         self.current = (self.current + 1) % self.players.len();
     }
@@ -112,21 +132,29 @@ impl Players {
         events: Query<(Entity, &DrawTiles)>,
         transform_query: Query<&Transform>,
     ) {
-        for (event, &DrawTiles(amount)) in events.iter() {
+        for (
+            event,
+            &DrawTiles {
+                ident,
+                amount,
+                delay,
+            },
+        ) in events.iter()
+        {
             let tiles = wall.draw(amount);
+            let player = players.player_by_ident_mut(ident);
+            let current_number_of_tiles = player.tiles.len();
 
-            let current_number_of_tiles = players.current_player().tiles.len();
-            let current_seat = players.current_player().seat;
-
-            match players.current_player_mut().add_tiles(&tiles) {
+            match player.add_tiles(&tiles) {
                 Ok(_) => {
                     for (index, tile_entity) in tiles.iter().enumerate() {
                         match transform_query.get(tile_entity.entity) {
                             Ok(transform) => {
                                 let animation = calculate_wall_to_hand_animation(
                                     index + current_number_of_tiles,
-                                    current_seat,
+                                    player.seat,
                                     *transform,
+                                    delay,
                                 );
                                 commands.insert_one(tile_entity.entity, animation);
                             }
@@ -147,7 +175,35 @@ impl Players {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct DrawTiles(pub usize);
+pub struct DrawTiles {
+    ident: PlayerIdent,
+    amount: usize,
+    delay: Option<std::time::Duration>,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum PlayerIdent {
+    Seat(Wind),
+    Wind(Wind),
+}
+
+impl DrawTiles {
+    fn new(ident: PlayerIdent, amount: usize) -> Self {
+        Self {
+            ident,
+            amount,
+            delay: None,
+        }
+    }
+
+    fn new_with_delay(ident: PlayerIdent, amount: usize, delay: std::time::Duration) -> Self {
+        Self {
+            ident,
+            amount,
+            delay: Some(delay),
+        }
+    }
+}
 
 fn calculate_hand_transform_from_index(index: usize) -> Transform {
     let half_hand_length = TileAssetData::WIDTH * (TILES_IN_HAND as f32) / 2.0;
@@ -179,6 +235,7 @@ fn calculate_wall_to_hand_animation(
     index: usize,
     seat: Wind,
     transform: Transform,
+    delay: Option<std::time::Duration>,
 ) -> EasingChainComponent<Transform> {
     let seat_rotation = calculate_rotation_from_seat(seat);
     let transform_to =
@@ -201,6 +258,13 @@ fn calculate_wall_to_hand_animation(
 
     transform
         .ease_to(
+            transform,
+            EaseMethod::Discrete,
+            EasingType::Once {
+                duration: delay.unwrap_or_else(|| std::time::Duration::from_millis(0)),
+            },
+        )
+        .ease_to(
             up_covered,
             EaseMethod::Linear,
             EasingType::Once {
@@ -221,4 +285,16 @@ fn calculate_wall_to_hand_animation(
                 duration: std::time::Duration::from_millis(500),
             },
         )
+}
+
+pub fn draw_hand_system(commands: &mut Commands) {
+    for round in 0..4 {
+        for (i, wind) in Wind::iter().enumerate() {
+            commands.spawn((DrawTiles::new_with_delay(
+                PlayerIdent::Wind(wind),
+                if round != 3 { 4 } else { 1 },
+                std::time::Duration::from_millis((round * 4 + i) as u64 * 500),
+            ),));
+        }
+    }
 }
