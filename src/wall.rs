@@ -1,7 +1,7 @@
 use crate::player::Players;
 use crate::tiles::{Tile, TileAssetData, Wind};
 use bevy::prelude::*;
-use bevy_easings::{Ease, EaseFunction, EaseMethod, EasingChainComponent, EasingType};
+use bevy_easings::{Ease, EaseFunction, EasingChainComponent, EasingType};
 use rand::prelude::SliceRandom;
 use rand::Rng;
 use std::collections::VecDeque;
@@ -13,15 +13,25 @@ const TOTAL_TILES: usize = TILES_PER_SIDE * 4;
 
 const TILES_IN_DEAD_WALL: usize = 7 * STACK_SIZE;
 
+pub const HALF_WALL_LENGTH: f32 = (STACKS_PER_SIDE as f32 / 2.0) * TileAssetData::WIDTH;
+
 #[derive(Debug, Copy, Clone)]
-struct TileEntity {
-    tile: Tile,
-    entity: Entity,
+pub struct TileEntity {
+    pub tile: Tile,
+    pub entity: Entity,
 }
+
+pub struct LiveTile;
 
 pub struct Wall {
     living_tiles: VecDeque<TileEntity>,
     rest: Vec<TileEntity>,
+}
+
+impl Wall {
+    pub fn draw(&mut self, amount: usize) -> Vec<TileEntity> {
+        self.living_tiles.drain(0..amount).collect()
+    }
 }
 
 pub struct Kans {
@@ -138,6 +148,10 @@ pub fn build_wall_system(
 
     let wall = Wall { living_tiles, rest };
 
+    wall.living_tiles.iter().for_each(|it| {
+        commands.insert_one(it.entity, LiveTile);
+    });
+
     commands.insert_resource(wall);
     commands.insert_resource(doras);
     commands.insert_resource(kans);
@@ -152,11 +166,10 @@ fn swap_neighbors(v: &mut Vec<TileEntity>) {
 }
 
 fn calculate_wall_transform_from_index(index: usize) -> Transform {
-    let half_wall_length = (STACKS_PER_SIDE as f32 / 2.0) * TileAssetData::WIDTH;
-    let z = half_wall_length + TileAssetData::WIDTH;
+    let z = HALF_WALL_LENGTH + TileAssetData::WIDTH;
 
     let x_index = STACKS_PER_SIDE - (index % TILES_PER_SIDE) / 2;
-    let x = x_index as f32 * TileAssetData::WIDTH - TileAssetData::WIDTH / 2.0 - half_wall_length;
+    let x = x_index as f32 * TileAssetData::WIDTH - TileAssetData::WIDTH / 2.0 - HALF_WALL_LENGTH;
 
     let y_index = (index + 1) % STACK_SIZE;
     let y = y_index as f32 * TileAssetData::HEIGHT + TileAssetData::HEIGHT / 2.0;

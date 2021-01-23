@@ -42,7 +42,9 @@ fn main() {
                 )
                 .with_update_stage(
                     GameState::Play,
-                    SystemStage::parallel().with_system(wall::Doras::reveal_system.system()),
+                    SystemStage::parallel()
+                        .with_system(wall::Doras::reveal_system.system())
+                        .with_system(player::Players::draw_tile_system.system()),
                 ),
         )
         .add_startup_system(setup.system())
