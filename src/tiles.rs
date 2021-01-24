@@ -273,8 +273,8 @@ impl Plant {
 pub struct TileAssetData {
     mesh: Handle<Mesh>,
     mesh_texture: Handle<Texture>,
+    covers: HashMap<Tile, Handle<Texture>>,
     textures: HashMap<Tile, Handle<Texture>>,
-    materials: HashMap<Tile, Handle<StandardMaterial>>,
 }
 
 impl TileAssetData {
@@ -282,13 +282,12 @@ impl TileAssetData {
     pub const HEIGHT: f32 = 0.023;
     pub const DEPTH: f32 = 0.039;
 
-    pub fn new_pbr(&self, tile: impl Into<Tile>, transform: Transform) -> bevy::pbr::PbrBundle {
-        PbrBundle {
-            mesh: self.mesh.clone(),
-            material: (*self.materials.get(&tile.into()).unwrap()).clone(),
-            transform,
-            ..Default::default()
-        }
+    pub fn get_mesh(&self) -> Handle<Mesh> {
+        self.mesh.clone()
+    }
+
+    pub fn get_texture(&self, tile: Tile) -> Handle<Texture> {
+        self.textures.get(&tile.into()).unwrap().clone()
     }
 }
 
@@ -296,7 +295,7 @@ pub fn load_tile_asset_data_system(commands: &mut Commands, asset_server: Res<As
     let mesh = asset_server.load("mesh/tile.gltf#Mesh0/Primitive0");
     let mesh_texture = asset_server.load("textures/tile.png");
 
-    let textures = [
+    let covers = [
         (Tile::Suit(Suit::Dot(Number::One)), "dots/1"),
         (Tile::Suit(Suit::Dot(Number::Two)), "dots/2"),
         (Tile::Suit(Suit::Dot(Number::Three)), "dots/3"),
@@ -355,19 +354,18 @@ pub fn load_tile_asset_data_system(commands: &mut Commands, asset_server: Res<As
     commands.insert_resource(TileAssetData {
         mesh,
         mesh_texture,
-        materials: HashMap::new(),
-        textures,
+        covers,
+        textures: HashMap::new(),
     });
 }
 
-pub fn create_materials_system(
+pub fn blend_tile_textures_system(
     mut state: ResMut<State<GameState>>,
     mut tile_asset_data: ResMut<TileAssetData>,
     mut textures: ResMut<Assets<Texture>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     if tile_asset_data
-        .textures
+        .covers
         .iter()
         .map(|(_, handle)| handle)
         .chain(std::iter::once(&tile_asset_data.mesh_texture))
@@ -376,8 +374,8 @@ pub fn create_materials_system(
         return;
     }
 
-    tile_asset_data.materials = tile_asset_data
-        .textures
+    tile_asset_data.textures = tile_asset_data
+        .covers
         .iter()
         .map(|(tile, texture_handle)| {
             let new_texture = {
@@ -386,12 +384,7 @@ pub fn create_materials_system(
                 alpha_blend_textures(mesh_texture, tile_texture)
             };
 
-            let new_texture_handle = textures.add(new_texture);
-
-            (
-                *tile,
-                materials.add(StandardMaterial::from(new_texture_handle)),
-            )
+            (*tile, textures.add(new_texture))
         })
         .collect();
 

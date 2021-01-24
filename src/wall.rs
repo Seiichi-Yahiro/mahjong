@@ -93,6 +93,7 @@ pub fn build_wall_system(
     commands: &mut Commands,
     players: Res<Players>,
     tile_asset_data: Res<TileAssetData>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let mut living_tiles: VecDeque<TileEntity> = {
         let mut tiles = Tile::new_set(false);
@@ -104,15 +105,33 @@ pub fn build_wall_system(
             .into_iter()
             .enumerate()
             .map(|(index, tile)| {
-                let transform = calculate_wall_transform_from_index(
-                    TOTAL_TILES + index + living_offset - TILES_IN_DEAD_WALL,
-                );
-                let rotation =
-                    Transform::from_rotation(Quat::from_rotation_x(std::f32::consts::PI));
+                let pbr = {
+                    let transform = calculate_wall_transform_from_index(
+                        TOTAL_TILES + index + living_offset - TILES_IN_DEAD_WALL,
+                    );
 
-                let pbr = tile_asset_data.new_pbr(tile, transform * rotation);
+                    let cover_tile_rotation = {
+                        let angle = std::f32::consts::PI;
+                        let quat = Quat::from_rotation_x(angle);
+                        Transform::from_rotation(quat)
+                    };
 
-                let entity = commands.spawn(pbr).with(tile).current_entity().unwrap();
+                    let texture = tile_asset_data.get_texture(tile);
+                    let material = materials.add(StandardMaterial::from(texture));
+
+                    PbrBundle {
+                        mesh: tile_asset_data.get_mesh(),
+                        material,
+                        transform: transform * cover_tile_rotation,
+                        ..Default::default()
+                    }
+                };
+
+                let entity = commands
+                    .spawn(pbr)
+                    .with(tile)
+                    .current_entity()
+                    .unwrap();
 
                 TileEntity { tile, entity }
             })

@@ -31,7 +31,7 @@ fn main() {
             StateStage::<GameState>::default()
                 .with_update_stage(
                     GameState::Loading,
-                    SystemStage::single(tiles::create_materials_system.system()),
+                    SystemStage::single(tiles::blend_tile_textures_system.system()),
                 )
                 .with_exit_stage(
                     GameState::Loading,
