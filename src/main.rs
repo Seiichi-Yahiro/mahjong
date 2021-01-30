@@ -1,8 +1,5 @@
-mod player;
 mod tiles;
-mod wall;
 
-use crate::player::Players;
 use bevy::prelude::*;
 use bevy::render::camera::PerspectiveProjection;
 use bevy_easings::EasingsPlugin;
@@ -22,32 +19,15 @@ fn main() {
         .add_resource(Msaa { samples: 8 })
         .add_plugins(DefaultPlugins)
         .add_plugin(EasingsPlugin)
-        .add_resource(Players::new())
         .add_resource(State::new(GameState::Loading))
         .add_startup_system(tiles::load_tile_asset_data_system.system())
         .add_stage_after(
             stage::UPDATE,
             "game_state",
-            StateStage::<GameState>::default()
-                .with_update_stage(
-                    GameState::Loading,
-                    SystemStage::single(tiles::blend_tile_textures_system.system()),
-                )
-                .with_exit_stage(
-                    GameState::Loading,
-                    Schedule::default().with_stage(
-                        "setup_game",
-                        SystemStage::parallel()
-                            .with_system(wall::build_wall_system.system())
-                            .with_system(player::draw_hand_system.system()),
-                    ),
-                )
-                .with_update_stage(
-                    GameState::Play,
-                    SystemStage::parallel()
-                        .with_system(wall::Doras::reveal_system.system())
-                        .with_system(player::Players::draw_tile_system.system()),
-                ),
+            StateStage::<GameState>::default().with_update_stage(
+                GameState::Loading,
+                SystemStage::single(tiles::blend_tile_textures_system.system()),
+            ),
         )
         .add_startup_system(setup.system())
         .run();
@@ -59,7 +39,7 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_translation(Vec3::new(0.0, 0.7, 0.7))
+        transform: Transform::from_translation(Vec3::new(0.0, 1.2, 0.1))
             .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::unit_y()),
         perspective_projection: PerspectiveProjection {
             near: 0.01,
