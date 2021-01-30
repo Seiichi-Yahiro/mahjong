@@ -15,4 +15,5 @@ features = ["dynamic"]
 
 [dependencies]
 bevy_easings = "0.3.0"
+bevy_mod_picking = "0.3.7"
 rand = "0.8.2"

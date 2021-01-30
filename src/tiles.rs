@@ -286,6 +286,10 @@ impl TileAssetData {
         self.mesh.clone()
     }
 
+    pub fn get_mesh_texture(&self) -> Handle<Texture> {
+        self.mesh_texture.clone()
+    }
+
     pub fn get_texture(&self, tile: Tile) -> Handle<Texture> {
         self.textures.get(&tile.into()).unwrap().clone()
     }
@@ -388,7 +392,7 @@ pub fn blend_tile_textures_system(
         })
         .collect();
 
-    state.set_next(GameState::Play).unwrap();
+    state.set_next(GameState::Editor).unwrap();
 }
 
 fn alpha_blend_textures(mesh_texture: &Texture, tile_texture: &Texture) -> Texture {

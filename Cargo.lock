@@ -511,6 +511,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_mod_picking"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d54160ba928673ba10f8b615a53de23981fa57cd5e4768f960da439a12417ec4"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "bevy_pbr"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2188,6 +2197,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_easings",
+ "bevy_mod_picking",
  "rand 0.8.2",
 ]
 
