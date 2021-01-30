@@ -1,3 +1,4 @@
+mod table;
 mod tiles;
 
 use bevy::prelude::*;
@@ -20,24 +21,27 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EasingsPlugin)
         .add_resource(State::new(GameState::Loading))
+        .add_startup_system(table::load_table_asset_data_system.system())
         .add_startup_system(tiles::load_tile_asset_data_system.system())
         .add_stage_after(
             stage::UPDATE,
             "game_state",
-            StateStage::<GameState>::default().with_update_stage(
-                GameState::Loading,
-                SystemStage::single(tiles::blend_tile_textures_system.system()),
-            ),
+            StateStage::<GameState>::default()
+                .with_update_stage(
+                    GameState::Loading,
+                    SystemStage::single(tiles::blend_tile_textures_system.system()),
+                )
+                .with_exit_stage(
+                    GameState::Loading,
+                    SystemStage::parallel()
+                        .with_system(setup.system())
+                        .with_system(table::spawn_table_system.system()),
+                ),
         )
-        .add_startup_system(setup.system())
         .run();
 }
 
-fn setup(
-    commands: &mut Commands,
-    asset_server: Res<AssetServer>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
+fn setup(commands: &mut Commands) {
     commands.spawn(Camera3dBundle {
         transform: Transform::from_translation(Vec3::new(0.0, 1.2, 0.1))
             .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::unit_y()),
@@ -51,14 +55,6 @@ fn setup(
 
     commands.spawn(LightBundle {
         transform: Transform::from_translation(Vec3::new(0.0, 5.0, 4.0)),
-        ..Default::default()
-    });
-
-    commands.spawn(PbrBundle {
-        mesh: asset_server.load("mesh/table.gltf#Mesh0/Primitive0"),
-        material: materials.add(StandardMaterial::from(
-            asset_server.load("textures/table.png"),
-        )),
         ..Default::default()
     });
 }
