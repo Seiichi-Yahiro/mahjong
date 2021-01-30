@@ -3,8 +3,52 @@ use crate::tiles::TileAssetData;
 use bevy::prelude::*;
 use bevy_mod_picking::{Group, PickableMesh};
 
+const GRID_WIDTH: f32 = TileAssetData::WIDTH / 2.0;
+const GRID_HEIGHT: f32 = TileAssetData::DEPTH / 2.0;
+
+const HALF_TILE_WIDTH: f32 = TileAssetData::WIDTH / 2.0;
+const HALF_TILE_HEIGHT: f32 = TileAssetData::HEIGHT / 2.0;
+const HALF_TILE_DEPTH: f32 = TileAssetData::DEPTH / 2.0;
+
+const MAX_X: f32 = TableAssetData::INNER_SIZE / 2.0 - HALF_TILE_WIDTH;
+const MAX_Z: f32 = TableAssetData::INNER_SIZE / 2.0 - HALF_TILE_DEPTH;
+
 pub struct PlaceAbleTile;
 pub struct PlacedTile;
+
+#[derive(Debug, Copy, Clone)]
+pub struct GridPos {
+    x: i32,
+    y: i32,
+    z: i32,
+}
+
+impl GridPos {
+    pub fn new(x: i32, y: i32, z: i32) -> Self {
+        Self { x, y, z }
+    }
+
+    pub fn from_world(Vec3 { x, y, z }: Vec3) -> Self {
+        use bevy::math::*;
+
+        let x_mouse = clamp(x + HALF_TILE_WIDTH, -MAX_X + HALF_TILE_WIDTH, MAX_X);
+        let z_mouse = clamp(z + HALF_TILE_DEPTH, -MAX_Z + HALF_TILE_DEPTH, MAX_Z);
+
+        let x_grid = (x_mouse / GRID_WIDTH).floor() as i32;
+        let y_grid = 0;
+        let z_grid = (z_mouse / GRID_HEIGHT).floor() as i32;
+
+        GridPos::new(x_grid, y_grid, z_grid)
+    }
+
+    pub fn to_world(self) -> Vec3 {
+        Vec3::new(
+            self.x as f32 * GRID_WIDTH,
+            self.y as f32 * TileAssetData::HEIGHT + HALF_TILE_HEIGHT,
+            self.z as f32 * GRID_HEIGHT,
+        )
+    }
+}
 
 pub fn create_placeable_tile_system(
     commands: &mut Commands,
@@ -49,8 +93,8 @@ pub fn place_tile_system(
     if let Some(mouse_pos) = intersection.map(|it| it.position().clone()) {
         let mut transform = placeable_tile_query.iter_mut().next().unwrap();
 
-        let grid_pos = mouse_to_grid(mouse_pos);
-        let world_pos = grid_to_world(grid_pos);
+        let grid_pos = GridPos::from_world(mouse_pos);
+        let world_pos = grid_pos.to_world();
 
         transform.translation = world_pos;
 
@@ -67,34 +111,4 @@ pub fn place_tile_system(
             commands.spawn(pbr).with(PlacedTile);
         }
     }
-}
-
-const GRID_WIDTH: f32 = TileAssetData::WIDTH / 2.0;
-const GRID_HEIGHT: f32 = TileAssetData::DEPTH / 2.0;
-
-const HALF_TILE_WIDTH: f32 = TileAssetData::WIDTH / 2.0;
-const HALF_TILE_HEIGHT: f32 = TileAssetData::HEIGHT / 2.0;
-const HALF_TILE_DEPTH: f32 = TileAssetData::DEPTH / 2.0;
-
-const MAX_X: f32 = TableAssetData::INNER_SIZE / 2.0 - HALF_TILE_WIDTH;
-const MAX_Z: f32 = TableAssetData::INNER_SIZE / 2.0 - HALF_TILE_DEPTH;
-
-fn mouse_to_grid(Vec3 { x, y, z }: Vec3) -> Vec3 {
-    use bevy::math::*;
-
-    let x_mouse = clamp(x + HALF_TILE_WIDTH, -MAX_X + HALF_TILE_WIDTH, MAX_X);
-    let z_mouse = clamp(z + HALF_TILE_DEPTH, -MAX_Z + HALF_TILE_DEPTH, MAX_Z);
-
-    let x_grid = (x_mouse / GRID_WIDTH).floor();
-    let z_grid = (z_mouse / GRID_HEIGHT).floor();
-
-    Vec3::new(x_grid, 0.0, z_grid)
-}
-
-fn grid_to_world(Vec3 { x, y, z }: Vec3) -> Vec3 {
-    Vec3::new(
-        x * GRID_WIDTH,
-        (y + 1.0) * HALF_TILE_HEIGHT,
-        z * GRID_HEIGHT,
-    )
 }
