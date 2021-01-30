@@ -1,11 +1,12 @@
+mod camera;
+mod clamped_value;
 mod editor;
 mod table;
 mod tiles;
 
 use bevy::prelude::*;
-use bevy::render::camera::PerspectiveProjection;
 use bevy_easings::EasingsPlugin;
-use bevy_mod_picking::{PickSource, PickingPlugin};
+use bevy_mod_picking::PickingPlugin;
 
 #[derive(Debug, Clone, Copy)]
 pub enum GameState {
@@ -38,7 +39,8 @@ fn main() {
                 .with_exit_stage(
                     GameState::Loading,
                     SystemStage::parallel()
-                        .with_system(setup.system())
+                        .with_system(create_light_system.system())
+                        .with_system(camera::create_camera_system.system())
                         .with_system(table::spawn_table_system.system()),
                 )
                 .with_enter_stage(
@@ -48,26 +50,15 @@ fn main() {
                 )
                 .with_update_stage(
                     GameState::Editor,
-                    SystemStage::parallel().with_system(editor::place_tile_system.system()),
+                    SystemStage::parallel()
+                        .with_system(editor::place_tile_system.system())
+                        .with_system(camera::camera_movement_system.system()),
                 ),
         )
         .run();
 }
 
-fn setup(commands: &mut Commands) {
-    commands
-        .spawn(Camera3dBundle {
-            transform: Transform::from_translation(Vec3::new(0.0, 1.2, 0.001))
-                .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::unit_y()),
-            perspective_projection: PerspectiveProjection {
-                near: 0.01,
-                far: 10.0,
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .with(PickSource::default());
-
+fn create_light_system(commands: &mut Commands) {
     commands.spawn(LightBundle {
         transform: Transform::from_translation(Vec3::new(0.0, 5.0, 4.0)),
         ..Default::default()
