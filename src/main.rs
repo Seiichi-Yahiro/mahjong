@@ -1,9 +1,10 @@
 mod camera;
 mod clamped_value;
-mod editor;
+mod solitaire;
 mod table;
 mod tiles;
 
+use crate::solitaire::grid::TileGridSet;
 use bevy::prelude::*;
 use bevy_easings::EasingsPlugin;
 use bevy_mod_picking::PickingPlugin;
@@ -25,6 +26,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EasingsPlugin)
         .add_plugin(PickingPlugin)
+        .add_resource(TileGridSet::new())
         .add_resource(State::new(GameState::Loading))
         .add_startup_system(table::load_table_asset_data_system.system())
         .add_startup_system(tiles::load_tile_asset_data_system.system())
@@ -46,12 +48,12 @@ fn main() {
                 .with_enter_stage(
                     GameState::Editor,
                     SystemStage::parallel()
-                        .with_system(editor::create_placeable_tile_system.system()),
+                        .with_system(solitaire::editor::create_placeable_tile_system.system()),
                 )
                 .with_update_stage(
                     GameState::Editor,
                     SystemStage::parallel()
-                        .with_system(editor::place_tile_system.system())
+                        .with_system(solitaire::editor::place_tile_system.system())
                         .with_system(camera::camera_movement_system.system()),
                 ),
         )
