@@ -52,12 +52,27 @@ fn main() {
                 )
                 .with_update_stage(
                     GameState::Editor,
-                    SystemStage::parallel()
-                        .with_system(solitaire::editor::move_placeable_tile_system.system())
-                        .with_system(solitaire::editor::is_placeable_system.system())
-                        .with_system(solitaire::editor::color_placeable_tile_system.system())
-                        .with_system(solitaire::editor::place_tile_system.system())
-                        .with_system(camera::camera_movement_system.system()),
+                    Schedule::default()
+                        .with_stage(
+                            "1",
+                            SystemStage::serial()
+                                .with_system(solitaire::editor::move_placeable_tile_system.system())
+                                .with_system(solitaire::editor::is_placeable_system.system()),
+                        )
+                        .with_stage(
+                            "2",
+                            SystemStage::parallel()
+                                .with_system(
+                                    solitaire::editor::color_placeable_tile_system.system(),
+                                )
+                                .with_system(solitaire::editor::place_tile_system.system())
+                                .with_system(camera::camera_movement_system.system()),
+                        )
+                        .with_stage(
+                            "3",
+                            SystemStage::parallel()
+                                .with_system(solitaire::editor::undo_system.system()),
+                        ),
                 ),
         )
         .run();

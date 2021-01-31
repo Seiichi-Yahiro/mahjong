@@ -144,3 +144,30 @@ pub fn place_tile_system(
         }
     }
 }
+
+pub struct PlacementOrder(Vec<(Entity, GridPos)>);
+
+impl Default for PlacementOrder {
+    fn default() -> Self {
+        Self(Vec::with_capacity(NUMBER_OF_TILES_WITH_BONUS as usize))
+    }
+}
+
+pub fn undo_system(
+    commands: &mut Commands,
+    mut state: Local<PlacementOrder>,
+    keyboard_input: Res<Input<KeyCode>>,
+    mut tile_grid_set: ResMut<TileGridSet>,
+    query: Query<(Entity, &GridPos), Added<PlacedTile>>,
+) {
+    for (entity, &grid_pos) in query.iter() {
+        state.0.push((entity, grid_pos));
+    }
+
+    if keyboard_input.just_pressed(KeyCode::U) {
+        if let Some((entity, grid_pos)) = state.0.pop() {
+            tile_grid_set.remove(&grid_pos);
+            commands.despawn(entity);
+        }
+    }
+}
