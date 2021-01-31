@@ -90,7 +90,10 @@ pub fn is_placeable_system(
 
 pub fn color_placeable_tile_system(
     mut materials: ResMut<Assets<StandardMaterial>>,
-    placeable_tile_query: Query<(&Handle<StandardMaterial>, &PlaceAbleTile)>,
+    placeable_tile_query: Query<
+        (&Handle<StandardMaterial>, &PlaceAbleTile),
+        Changed<PlaceAbleTile>,
+    >,
 ) {
     for (material_handle, &PlaceAbleTile(is_placeable)) in placeable_tile_query.iter() {
         let color = if is_placeable {
