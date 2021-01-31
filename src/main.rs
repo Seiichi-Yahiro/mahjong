@@ -12,6 +12,7 @@ use bevy_mod_picking::PickingPlugin;
 #[derive(Debug, Clone, Copy)]
 pub enum GameState {
     Loading,
+    Menu,
     Play,
     Editor,
 }
@@ -29,6 +30,7 @@ fn main() {
         .register_type::<GridPos>()
         .add_resource(TileGridSet::new())
         .add_resource(State::new(GameState::Loading))
+        .add_startup_system(create_ui_camera_system.system())
         .add_startup_system(table::load_table_asset_data_system.system())
         .add_startup_system(tiles::load_tile_asset_data_system.system())
         .add_stage_after(
@@ -68,6 +70,7 @@ fn main() {
                                     solitaire::editor::color_placeable_tile_system.system(),
                                 )
                                 .with_system(solitaire::editor::place_tile_system.system())
+                                .with_system(solitaire::editor::exit_editor_system.system())
                                 .with_system(camera::camera_movement_system.system()),
                         )
                         .with_stage(
@@ -79,9 +82,17 @@ fn main() {
                                 )
                                 .with_system(solitaire::editor::save_level_system.system()),
                         ),
+                )
+                .with_exit_stage(
+                    GameState::Editor,
+                    SystemStage::single(solitaire::editor::clean_up_system.system()),
                 ),
         )
         .run();
+}
+
+fn create_ui_camera_system(commands: &mut Commands) {
+    commands.spawn(CameraUiBundle::default());
 }
 
 fn create_light_system(commands: &mut Commands) {

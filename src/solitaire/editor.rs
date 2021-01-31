@@ -1,9 +1,12 @@
 use crate::solitaire::grid::{GridPos, TileGridSet};
 use crate::table::Table;
 use crate::tiles::{TileAssetData, NUMBER_OF_TILES_WITH_BONUS};
+use crate::GameState;
 use bevy::prelude::*;
 use bevy::reflect::TypeRegistry;
 use bevy_mod_picking::{Group, PickableMesh};
+
+pub struct EditorEntity;
 
 const ALPHA_VALUE: f32 = 0.3;
 
@@ -42,6 +45,7 @@ pub fn create_placeable_tile_system(
 
     commands
         .spawn(pbr)
+        .with(EditorEntity)
         .with(PlaceAbleTile(true))
         .with(GridPos::default());
 }
@@ -144,7 +148,11 @@ pub fn place_tile_system(
                 ..Default::default()
             };
 
-            commands.spawn(pbr).with(PlacedTile).with(grid_pos);
+            commands
+                .spawn(pbr)
+                .with(EditorEntity)
+                .with(PlacedTile)
+                .with(grid_pos);
         }
     }
 }
@@ -182,7 +190,6 @@ pub fn create_ui_system(commands: &mut Commands, asset_server: Res<AssetServer>)
     let font = asset_server.load("fonts/FiraSans-Regular.ttf");
 
     commands
-        .spawn(CameraUiBundle::default())
         .spawn(TextBundle {
             node: Default::default(),
             style: Style {
@@ -209,6 +216,7 @@ pub fn create_ui_system(commands: &mut Commands, asset_server: Res<AssetServer>)
             },
             ..Default::default()
         })
+        .with(EditorEntity)
         .with(RemainingTilesText);
 }
 
@@ -265,5 +273,17 @@ pub fn save_level_system(world: &mut World, resources: &mut Resources) {
                 }
             },
         },
+    }
+}
+
+pub fn exit_editor_system(key_input: Res<Input<KeyCode>>, mut state: ResMut<State<GameState>>) {
+    if key_input.just_pressed(KeyCode::Escape) {
+        state.set_next(GameState::Menu).unwrap()
+    }
+}
+
+pub fn clean_up_system(commands: &mut Commands, query: Query<Entity, With<EditorEntity>>) {
+    for entity in query.iter() {
+        commands.despawn_recursive(entity);
     }
 }

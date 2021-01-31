@@ -52,7 +52,6 @@ pub fn camera_movement_system(
     mut camera_query: Query<&mut Transform, With<Camera>>,
 ) {
     use bevy::math::*;
-    let mut transform = camera_query.iter_mut().next().unwrap();
 
     if mouse_button_input.pressed(MouseButton::Right) {
         for MouseMotion { delta } in camera_state
@@ -73,11 +72,13 @@ pub fn camera_movement_system(
         camera_state.distance -= y * speed;
     }
 
-    *transform =
-        Transform::from_rotation(Quat::from_rotation_ypr(
-            camera_state.yaw.value().to_radians(),
-            camera_state.pitch.value().to_radians(),
-            0.0,
-        )) * Transform::from_translation(Vec3::new(0.0, camera_state.distance.value(), 0.001))
-            .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::unit_y());
+    for mut transform in camera_query.iter_mut() {
+        *transform =
+            Transform::from_rotation(Quat::from_rotation_ypr(
+                camera_state.yaw.value().to_radians(),
+                camera_state.pitch.value().to_radians(),
+                0.0,
+            )) * Transform::from_translation(Vec3::new(0.0, camera_state.distance.value(), 0.001))
+                .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::unit_y());
+    }
 }
