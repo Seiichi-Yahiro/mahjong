@@ -3,6 +3,9 @@ use bevy::ecs::bevy_utils::HashMap;
 use bevy::prelude::*;
 use bevy::utils::AHashExt;
 
+pub const NUMBER_OF_TILE_WITHOUT_BONUS: u32 = (9 * 3 + 4 + 3) * 4;
+pub const NUMBER_OF_TILES_WITH_BONUS: u32 = NUMBER_OF_TILE_WITHOUT_BONUS + 2 * 4;
+
 pub trait EnumIter {
     fn next(self) -> Self;
 }

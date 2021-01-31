@@ -1,6 +1,6 @@
 use crate::solitaire::grid::{GridPos, TileGridSet};
 use crate::table::Table;
-use crate::tiles::TileAssetData;
+use crate::tiles::{TileAssetData, NUMBER_OF_TILES_WITH_BONUS};
 use bevy::prelude::*;
 use bevy_mod_picking::{Group, PickableMesh};
 
@@ -14,7 +14,7 @@ fn red_color() -> Color {
     Color::rgba(1.0, 0.0, 0.0, ALPHA_VALUE)
 }
 
-pub struct PlaceAbleTile;
+pub struct PlaceAbleTile(bool);
 pub struct PlacedTile;
 
 pub fn create_placeable_tile_system(
@@ -41,7 +41,7 @@ pub fn create_placeable_tile_system(
 
     commands
         .spawn(pbr)
-        .with(PlaceAbleTile)
+        .with(PlaceAbleTile(true))
         .with(GridPos::default());
 }
 
@@ -77,13 +77,23 @@ pub fn move_placeable_tile_system(
     }
 }
 
-pub fn color_placeable_tile_system(
+pub fn is_placeable_system(
     tile_grid_set: Res<TileGridSet>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    placeable_tile_query: Query<(&Handle<StandardMaterial>, &GridPos), With<PlaceAbleTile>>,
+    mut placeable_tile_query: Query<(&mut PlaceAbleTile, &GridPos)>,
 ) {
-    for (material_handle, grid_pos) in placeable_tile_query.iter() {
-        let color = if tile_grid_set.is_supported_from_below(*grid_pos) {
+    for (mut placeable_tile, &grid_pos) in placeable_tile_query.iter_mut() {
+        placeable_tile.0 = tile_grid_set.len() < NUMBER_OF_TILES_WITH_BONUS as usize
+            && !tile_grid_set.is_overlapping(grid_pos)
+            && tile_grid_set.is_supported_from_below(grid_pos);
+    }
+}
+
+pub fn color_placeable_tile_system(
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    placeable_tile_query: Query<(&Handle<StandardMaterial>, &PlaceAbleTile)>,
+) {
+    for (material_handle, &PlaceAbleTile(is_placeable)) in placeable_tile_query.iter() {
+        let color = if is_placeable {
             white_color()
         } else {
             red_color()
@@ -100,7 +110,7 @@ pub fn place_tile_system(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut tile_grid_set: ResMut<TileGridSet>,
     table_query: Query<&PickableMesh, With<Table>>,
-    placeable_tile_query: Query<&GridPos, With<PlaceAbleTile>>,
+    placeable_tile_query: Query<(&PlaceAbleTile, &GridPos)>,
 ) {
     if !mouse_button_input.just_pressed(MouseButton::Left) {
         return;
@@ -114,18 +124,23 @@ pub fn place_tile_system(
         .unwrap()
         .is_some();
 
-    let grid_pos = *placeable_tile_query.iter().next().unwrap();
+    if !is_hovering_table {
+        return;
+    }
 
-    if is_hovering_table && tile_grid_set.try_insert(grid_pos) {
-        info!("Spawned tile at: {:?}!", grid_pos);
+    for (&PlaceAbleTile(is_placeable), &grid_pos) in placeable_tile_query.iter() {
+        if is_placeable {
+            tile_grid_set.insert(grid_pos);
+            info!("Spawned tile at: {:?}!", grid_pos);
 
-        let pbr = PbrBundle {
-            mesh: tile_asset_data.get_mesh(),
-            material: materials.add(StandardMaterial::from(tile_asset_data.get_mesh_texture())),
-            transform: Transform::from_translation(grid_pos.to_world()),
-            ..Default::default()
-        };
+            let pbr = PbrBundle {
+                mesh: tile_asset_data.get_mesh(),
+                material: materials.add(StandardMaterial::from(tile_asset_data.get_mesh_texture())),
+                transform: Transform::from_translation(grid_pos.to_world()),
+                ..Default::default()
+            };
 
-        commands.spawn(pbr).with(PlacedTile).with(grid_pos);
+            commands.spawn(pbr).with(PlacedTile).with(grid_pos);
+        }
     }
 }

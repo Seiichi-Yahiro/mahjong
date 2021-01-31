@@ -60,14 +60,8 @@ impl TileGridSet {
         }
     }
 
-    pub fn try_insert(&mut self, pos: GridPos) -> bool {
-        let can_insert = !self.is_overlapping(pos) && self.is_supported_from_below(pos);
-
-        if can_insert {
-            self.set.insert(pos);
-        }
-
-        can_insert
+    pub fn insert(&mut self, pos: GridPos) -> bool {
+        self.set.insert(pos)
     }
 
     pub fn is_overlapping(&self, pos: GridPos) -> bool {
@@ -110,5 +104,9 @@ impl TileGridSet {
                 || (bottom && top_left && top_right)
                 || (top_left && top_right && bottom_left && bottom_right)
         }
+    }
+
+    pub fn len(&self) -> usize {
+        self.set.len()
     }
 }
