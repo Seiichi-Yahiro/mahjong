@@ -48,7 +48,8 @@ fn main() {
                 .with_enter_stage(
                     GameState::Editor,
                     SystemStage::parallel()
-                        .with_system(solitaire::editor::create_placeable_tile_system.system()),
+                        .with_system(solitaire::editor::create_placeable_tile_system.system())
+                        .with_system(solitaire::editor::create_ui_system.system()),
                 )
                 .with_update_stage(
                     GameState::Editor,
@@ -70,8 +71,11 @@ fn main() {
                         )
                         .with_stage(
                             "3",
-                            SystemStage::parallel()
-                                .with_system(solitaire::editor::undo_system.system()),
+                            SystemStage::serial()
+                                .with_system(solitaire::editor::undo_system.system())
+                                .with_system(
+                                    solitaire::editor::update_remaining_tiles_text_system.system(),
+                                ),
                         ),
                 ),
         )

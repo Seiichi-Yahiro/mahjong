@@ -174,3 +174,48 @@ pub fn undo_system(
         }
     }
 }
+
+pub struct RemainingTilesText;
+
+pub fn create_ui_system(commands: &mut Commands, asset_server: Res<AssetServer>) {
+    let font = asset_server.load("fonts/FiraSans-Regular.ttf");
+
+    commands
+        .spawn(CameraUiBundle::default())
+        .spawn(TextBundle {
+            node: Default::default(),
+            style: Style {
+                align_self: AlignSelf::FlexStart,
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    left: Val::Px(15.0),
+                    top: Val::Px(5.0),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            text: Text {
+                value: NUMBER_OF_TILES_WITH_BONUS.to_string(),
+                font,
+                style: TextStyle {
+                    font_size: 50.0,
+                    color: Color::WHITE,
+                    alignment: TextAlignment {
+                        horizontal: HorizontalAlign::Center,
+                        ..Default::default()
+                    },
+                },
+            },
+            ..Default::default()
+        })
+        .with(RemainingTilesText);
+}
+
+pub fn update_remaining_tiles_text_system(
+    tile_grid_set: ChangedRes<TileGridSet>,
+    mut text_query: Query<&mut Text, With<RemainingTilesText>>,
+) {
+    for mut text in text_query.iter_mut() {
+        text.value = (NUMBER_OF_TILES_WITH_BONUS as usize - tile_grid_set.len()).to_string();
+    }
+}
