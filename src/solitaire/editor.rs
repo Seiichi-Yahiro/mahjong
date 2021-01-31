@@ -2,6 +2,7 @@ use crate::solitaire::grid::{GridPos, TileGridSet};
 use crate::table::Table;
 use crate::tiles::{TileAssetData, NUMBER_OF_TILES_WITH_BONUS};
 use bevy::prelude::*;
+use bevy::reflect::TypeRegistry;
 use bevy_mod_picking::{Group, PickableMesh};
 
 const ALPHA_VALUE: f32 = 0.3;
@@ -217,5 +218,52 @@ pub fn update_remaining_tiles_text_system(
 ) {
     for mut text in text_query.iter_mut() {
         text.value = (NUMBER_OF_TILES_WITH_BONUS as usize - tile_grid_set.len()).to_string();
+    }
+}
+
+pub fn save_level_system(world: &mut World, resources: &mut Resources) {
+    use std::fs::File;
+    use std::io::prelude::*;
+
+    let key_input = resources.get::<Input<KeyCode>>().unwrap();
+    let tile_grid_set = resources.get::<TileGridSet>().unwrap();
+
+    if !key_input.just_pressed(KeyCode::S)
+        || tile_grid_set.len() < NUMBER_OF_TILES_WITH_BONUS as usize
+    {
+        return;
+    }
+
+    info!("Saving scene!");
+
+    let mut custom_world = World::new();
+
+    for grid_pos in world
+        .query_filtered::<&GridPos, With<PlacedTile>>()
+        .into_iter()
+    {
+        custom_world.spawn((*grid_pos,));
+    }
+
+    let type_registry = resources.get::<TypeRegistry>().unwrap();
+    let scene = DynamicScene::from_world(&custom_world, &type_registry);
+
+    match scene.serialize_ron(&type_registry) {
+        Err(err) => {
+            error!("Failed to serialize scene: {:?}!", err);
+        }
+        Ok(level) => match File::create("assets/scenes/levels/custom/custom_level.scn.ron") {
+            Err(err) => {
+                error!("Failed to create file: {:?}!", err);
+            }
+            Ok(mut file) => match file.write_all(level.as_bytes()) {
+                Err(err) => {
+                    error!("Failed to write level to file {:?}!", err);
+                }
+                Ok(_) => {
+                    info!("Scene successfully saved!");
+                }
+            },
+        },
     }
 }

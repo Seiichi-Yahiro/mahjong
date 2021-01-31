@@ -1,6 +1,6 @@
 use crate::table::TableAssetData;
 use crate::tiles::TileAssetData;
-use bevy::prelude::Vec3;
+use bevy::prelude::*;
 
 const GRID_WIDTH: f32 = TileAssetData::WIDTH / 2.0;
 const GRID_HEIGHT: f32 = TileAssetData::DEPTH / 2.0;
@@ -15,7 +15,8 @@ const HALF_TILE_DEPTH: f32 = TileAssetData::DEPTH / 2.0;
 const MAX_X: f32 = TableAssetData::INNER_SIZE / 2.0 - HALF_TILE_WIDTH;
 const MAX_Z: f32 = TableAssetData::INNER_SIZE / 2.0 - HALF_TILE_DEPTH;
 
-#[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Hash, Reflect)]
+#[reflect(Component)]
 pub struct GridPos {
     pub x: i32,
     pub y: i32,

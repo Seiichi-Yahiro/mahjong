@@ -4,7 +4,7 @@ mod solitaire;
 mod table;
 mod tiles;
 
-use crate::solitaire::grid::TileGridSet;
+use crate::solitaire::grid::{GridPos, TileGridSet};
 use bevy::prelude::*;
 use bevy_easings::EasingsPlugin;
 use bevy_mod_picking::PickingPlugin;
@@ -26,6 +26,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EasingsPlugin)
         .add_plugin(PickingPlugin)
+        .register_type::<GridPos>()
         .add_resource(TileGridSet::new())
         .add_resource(State::new(GameState::Loading))
         .add_startup_system(table::load_table_asset_data_system.system())
@@ -75,7 +76,8 @@ fn main() {
                                 .with_system(solitaire::editor::undo_system.system())
                                 .with_system(
                                     solitaire::editor::update_remaining_tiles_text_system.system(),
-                                ),
+                                )
+                                .with_system(solitaire::editor::save_level_system.system()),
                         ),
                 ),
         )
