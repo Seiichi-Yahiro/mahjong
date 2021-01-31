@@ -53,6 +53,8 @@ fn main() {
                 .with_update_stage(
                     GameState::Editor,
                     SystemStage::parallel()
+                        .with_system(solitaire::editor::move_placeable_tile_system.system())
+                        .with_system(solitaire::editor::color_placeable_tile_system.system())
                         .with_system(solitaire::editor::place_tile_system.system())
                         .with_system(camera::camera_movement_system.system()),
                 ),

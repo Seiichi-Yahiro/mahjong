@@ -15,7 +15,7 @@ const HALF_TILE_DEPTH: f32 = TileAssetData::DEPTH / 2.0;
 const MAX_X: f32 = TableAssetData::INNER_SIZE / 2.0 - HALF_TILE_WIDTH;
 const MAX_Z: f32 = TableAssetData::INNER_SIZE / 2.0 - HALF_TILE_DEPTH;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Hash)]
 pub struct GridPos {
     pub x: i32,
     pub y: i32,
