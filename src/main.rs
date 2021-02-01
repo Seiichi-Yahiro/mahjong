@@ -4,11 +4,27 @@ mod solitaire;
 mod table;
 mod tiles;
 
+use crate::solitaire::editor::EditorStateStagePlugin;
 use crate::solitaire::grid::{GridPos, TileGridSet};
 use bevy::asset::{HandleId, LoadState};
 use bevy::prelude::*;
 use bevy_easings::EasingsPlugin;
 use bevy_mod_picking::PickingPlugin;
+
+pub trait StateStagePlugin<S> {
+    fn build(&self, state_stage: &mut StateStage<S>);
+}
+
+trait StateStageExt<S> {
+    fn add_plugin<P: StateStagePlugin<S>>(self, plugin: P) -> Self;
+}
+
+impl<S> StateStageExt<S> for StateStage<S> {
+    fn add_plugin<P: StateStagePlugin<S>>(mut self, plugin: P) -> Self {
+        plugin.build(&mut self);
+        self
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub enum GameState {
@@ -51,45 +67,7 @@ fn main() {
                         .with_system(table::spawn_table_system.system())
                         .with_system(tiles::blend_tile_textures_system.system()),
                 )
-                .with_enter_stage(
-                    GameState::Editor,
-                    SystemStage::parallel()
-                        .with_system(solitaire::editor::create_placeable_tile_system.system())
-                        .with_system(solitaire::editor::create_ui_system.system()),
-                )
-                .with_update_stage(
-                    GameState::Editor,
-                    Schedule::default()
-                        .with_stage(
-                            "1",
-                            SystemStage::serial()
-                                .with_system(solitaire::editor::move_placeable_tile_system.system())
-                                .with_system(solitaire::editor::is_placeable_system.system()),
-                        )
-                        .with_stage(
-                            "2",
-                            SystemStage::parallel()
-                                .with_system(
-                                    solitaire::editor::color_placeable_tile_system.system(),
-                                )
-                                .with_system(solitaire::editor::place_tile_system.system())
-                                .with_system(solitaire::editor::exit_editor_system.system())
-                                .with_system(camera::camera_movement_system.system()),
-                        )
-                        .with_stage(
-                            "3",
-                            SystemStage::serial()
-                                .with_system(solitaire::editor::undo_system.system())
-                                .with_system(
-                                    solitaire::editor::update_remaining_tiles_text_system.system(),
-                                )
-                                .with_system(solitaire::editor::save_level_system.system()),
-                        ),
-                )
-                .with_exit_stage(
-                    GameState::Editor,
-                    SystemStage::single(solitaire::editor::clean_up_system.system()),
-                ),
+                .add_plugin(EditorStateStagePlugin),
         )
         .run();
 }

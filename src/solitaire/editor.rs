@@ -1,12 +1,54 @@
 use crate::solitaire::grid::{GridPos, TileGridSet};
 use crate::table::Table;
 use crate::tiles::{TileAssetData, NUMBER_OF_TILES_WITH_BONUS};
-use crate::GameState;
+use crate::{camera, GameState, StateStagePlugin};
 use bevy::prelude::*;
 use bevy::reflect::TypeRegistry;
 use bevy_mod_picking::{Group, PickableMesh};
 
-pub struct EditorEntity;
+pub struct EditorStateStagePlugin;
+
+impl StateStagePlugin<GameState> for EditorStateStagePlugin {
+    fn build(&self, state_stage: &mut StateStage<GameState>) {
+        let state = GameState::Editor;
+
+        state_stage
+            .set_enter_stage(
+                state,
+                SystemStage::parallel()
+                    .with_system(create_placeable_tile_system.system())
+                    .with_system(create_ui_system.system()),
+            )
+            .set_update_stage(
+                state,
+                Schedule::default()
+                    .with_stage(
+                        "1",
+                        SystemStage::serial()
+                            .with_system(move_placeable_tile_system.system())
+                            .with_system(is_placeable_system.system()),
+                    )
+                    .with_stage(
+                        "2",
+                        SystemStage::parallel()
+                            .with_system(color_placeable_tile_system.system())
+                            .with_system(place_tile_system.system())
+                            .with_system(exit_editor_system.system())
+                            .with_system(camera::camera_movement_system.system()),
+                    )
+                    .with_stage(
+                        "3",
+                        SystemStage::serial()
+                            .with_system(undo_system.system())
+                            .with_system(update_remaining_tiles_text_system.system())
+                            .with_system(save_level_system.system()),
+                    ),
+            )
+            .set_exit_stage(state, SystemStage::single(clean_up_system.system()));
+    }
+}
+
+struct EditorEntity;
 
 const ALPHA_VALUE: f32 = 0.3;
 
@@ -18,10 +60,10 @@ fn red_color() -> Color {
     Color::rgba(1.0, 0.0, 0.0, ALPHA_VALUE)
 }
 
-pub struct PlaceAbleTile(bool);
-pub struct PlacedTile;
+struct PlaceAbleTile(bool);
+struct PlacedTile;
 
-pub fn create_placeable_tile_system(
+fn create_placeable_tile_system(
     commands: &mut Commands,
     tile_asset_data: Res<TileAssetData>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -50,7 +92,7 @@ pub fn create_placeable_tile_system(
         .with(GridPos::default());
 }
 
-pub fn move_placeable_tile_system(
+fn move_placeable_tile_system(
     tile_grid_set: Res<TileGridSet>,
     table_query: Query<&PickableMesh, With<Table>>,
     mut placeable_tile_query: Query<(&mut Transform, &mut GridPos), With<PlaceAbleTile>>,
@@ -82,7 +124,7 @@ pub fn move_placeable_tile_system(
     }
 }
 
-pub fn is_placeable_system(
+fn is_placeable_system(
     tile_grid_set: Res<TileGridSet>,
     mut placeable_tile_query: Query<(&mut PlaceAbleTile, &GridPos)>,
 ) {
@@ -93,7 +135,7 @@ pub fn is_placeable_system(
     }
 }
 
-pub fn color_placeable_tile_system(
+fn color_placeable_tile_system(
     mut materials: ResMut<Assets<StandardMaterial>>,
     placeable_tile_query: Query<
         (&Handle<StandardMaterial>, &PlaceAbleTile),
@@ -111,7 +153,7 @@ pub fn color_placeable_tile_system(
     }
 }
 
-pub fn place_tile_system(
+fn place_tile_system(
     commands: &mut Commands,
     mouse_button_input: Res<Input<MouseButton>>,
     tile_asset_data: Res<TileAssetData>,
@@ -157,7 +199,7 @@ pub fn place_tile_system(
     }
 }
 
-pub struct PlacementOrder(Vec<(Entity, GridPos)>);
+struct PlacementOrder(Vec<(Entity, GridPos)>);
 
 impl Default for PlacementOrder {
     fn default() -> Self {
@@ -165,7 +207,7 @@ impl Default for PlacementOrder {
     }
 }
 
-pub fn undo_system(
+fn undo_system(
     commands: &mut Commands,
     mut state: Local<PlacementOrder>,
     keyboard_input: Res<Input<KeyCode>>,
@@ -184,9 +226,9 @@ pub fn undo_system(
     }
 }
 
-pub struct RemainingTilesText;
+struct RemainingTilesText;
 
-pub fn create_ui_system(commands: &mut Commands, asset_server: Res<AssetServer>) {
+fn create_ui_system(commands: &mut Commands, asset_server: Res<AssetServer>) {
     let font = asset_server.load("fonts/FiraSans-Regular.ttf");
 
     commands
@@ -220,7 +262,7 @@ pub fn create_ui_system(commands: &mut Commands, asset_server: Res<AssetServer>)
         .with(RemainingTilesText);
 }
 
-pub fn update_remaining_tiles_text_system(
+fn update_remaining_tiles_text_system(
     tile_grid_set: ChangedRes<TileGridSet>,
     mut text_query: Query<&mut Text, With<RemainingTilesText>>,
 ) {
@@ -229,7 +271,7 @@ pub fn update_remaining_tiles_text_system(
     }
 }
 
-pub fn save_level_system(world: &mut World, resources: &mut Resources) {
+fn save_level_system(world: &mut World, resources: &mut Resources) {
     use std::fs::File;
     use std::io::prelude::*;
 
@@ -276,13 +318,13 @@ pub fn save_level_system(world: &mut World, resources: &mut Resources) {
     }
 }
 
-pub fn exit_editor_system(key_input: Res<Input<KeyCode>>, mut state: ResMut<State<GameState>>) {
+fn exit_editor_system(key_input: Res<Input<KeyCode>>, mut state: ResMut<State<GameState>>) {
     if key_input.just_pressed(KeyCode::Escape) {
         state.set_next(GameState::Menu).unwrap()
     }
 }
 
-pub fn clean_up_system(
+fn clean_up_system(
     commands: &mut Commands,
     mut tile_grid_set: ResMut<TileGridSet>,
     query: Query<Entity, With<EditorEntity>>,
