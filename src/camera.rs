@@ -4,6 +4,8 @@ use bevy::prelude::*;
 use bevy::render::camera::{Camera, PerspectiveProjection};
 use bevy_mod_picking::PickSource;
 
+pub struct Camera3d;
+
 pub fn create_camera_system(commands: &mut Commands) {
     commands
         .spawn(Camera3dBundle {
@@ -16,6 +18,7 @@ pub fn create_camera_system(commands: &mut Commands) {
             },
             ..Default::default()
         })
+        .with(Camera3d)
         .with(PickSource::default());
 }
 
@@ -49,7 +52,7 @@ pub fn camera_movement_system(
     mouse_motion_events: Res<Events<MouseMotion>>,
     mouse_wheel_events: Res<Events<MouseWheel>>,
     mouse_button_input: Res<Input<MouseButton>>,
-    mut camera_query: Query<&mut Transform, With<Camera>>,
+    mut camera_query: Query<&mut Transform, With<Camera3d>>,
 ) {
     use bevy::math::*;
 
