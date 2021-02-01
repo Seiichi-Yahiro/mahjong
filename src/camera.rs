@@ -1,7 +1,7 @@
 use crate::clamped_value::ClampedValue;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::*;
-use bevy::render::camera::{Camera, PerspectiveProjection};
+use bevy::render::camera::PerspectiveProjection;
 use bevy_mod_picking::PickSource;
 
 pub struct Camera3d;

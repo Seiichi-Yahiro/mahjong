@@ -5,6 +5,7 @@ mod table;
 mod tiles;
 
 use crate::solitaire::grid::{GridPos, TileGridSet};
+use bevy::asset::{HandleId, LoadState};
 use bevy::prelude::*;
 use bevy_easings::EasingsPlugin;
 use bevy_mod_picking::PickingPlugin;
@@ -27,6 +28,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EasingsPlugin)
         .add_plugin(PickingPlugin)
+        .init_resource::<LoadingAssets>()
         .register_type::<GridPos>()
         .add_resource(TileGridSet::new())
         .add_resource(State::new(GameState::Loading))
@@ -39,14 +41,15 @@ fn main() {
             StateStage::<GameState>::default()
                 .with_update_stage(
                     GameState::Loading,
-                    SystemStage::single(tiles::blend_tile_textures_system.system()),
+                    SystemStage::single(check_load_state_system.system()),
                 )
                 .with_exit_stage(
                     GameState::Loading,
                     SystemStage::parallel()
                         .with_system(create_light_system.system())
                         .with_system(camera::create_camera_system.system())
-                        .with_system(table::spawn_table_system.system()),
+                        .with_system(table::spawn_table_system.system())
+                        .with_system(tiles::blend_tile_textures_system.system()),
                 )
                 .with_enter_stage(
                     GameState::Editor,
@@ -100,4 +103,26 @@ fn create_light_system(commands: &mut Commands) {
         transform: Transform::from_translation(Vec3::new(0.0, 5.0, 4.0)),
         ..Default::default()
     });
+}
+
+#[derive(Default)]
+pub struct LoadingAssets(Vec<HandleId>);
+
+fn check_load_state_system(
+    asset_server: Res<AssetServer>,
+    mut loading_assets: ResMut<LoadingAssets>,
+    mut state: ResMut<State<GameState>>,
+) {
+    match asset_server.get_group_load_state(loading_assets.0.iter().cloned()) {
+        LoadState::NotLoaded | LoadState::Loading => {
+            return;
+        }
+        LoadState::Loaded => {
+            loading_assets.0.clear();
+            state.set_next(GameState::Editor).unwrap();
+        }
+        LoadState::Failed => {
+            panic!("Failed to load assets!");
+        }
+    };
 }

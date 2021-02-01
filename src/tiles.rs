@@ -1,4 +1,4 @@
-use crate::GameState;
+use crate::LoadingAssets;
 use bevy::ecs::bevy_utils::HashMap;
 use bevy::prelude::*;
 use bevy::utils::AHashExt;
@@ -298,9 +298,16 @@ impl TileAssetData {
     }
 }
 
-pub fn load_tile_asset_data_system(commands: &mut Commands, asset_server: Res<AssetServer>) {
+pub fn load_tile_asset_data_system(
+    commands: &mut Commands,
+    asset_server: Res<AssetServer>,
+    mut loading_assets: ResMut<LoadingAssets>,
+) {
     let mesh = asset_server.load("mesh/tile.gltf#Mesh0/Primitive0");
     let mesh_texture = asset_server.load("textures/tile.png");
+
+    loading_assets.0.push(mesh.id);
+    loading_assets.0.push(mesh_texture.id);
 
     let covers = [
         (Tile::Suit(Suit::Dot(Number::One)), "dots/1"),
@@ -351,10 +358,11 @@ pub fn load_tile_asset_data_system(commands: &mut Commands, asset_server: Res<As
     ]
     .iter()
     .map(|(tile, path)| {
-        (
-            *tile,
-            asset_server.load(format!("textures/{}.png", path).as_str()),
-        )
+        let handle = asset_server.load(format!("textures/{}.png", path).as_str());
+
+        loading_assets.0.push(handle.id);
+
+        (*tile, handle)
     })
     .collect::<HashMap<_, _>>();
 
@@ -367,20 +375,9 @@ pub fn load_tile_asset_data_system(commands: &mut Commands, asset_server: Res<As
 }
 
 pub fn blend_tile_textures_system(
-    mut state: ResMut<State<GameState>>,
     mut tile_asset_data: ResMut<TileAssetData>,
     mut textures: ResMut<Assets<Texture>>,
 ) {
-    if tile_asset_data
-        .covers
-        .iter()
-        .map(|(_, handle)| handle)
-        .chain(std::iter::once(&tile_asset_data.mesh_texture))
-        .any(|handle| textures.get(handle).is_none())
-    {
-        return;
-    }
-
     tile_asset_data.textures = tile_asset_data
         .covers
         .iter()
@@ -394,8 +391,6 @@ pub fn blend_tile_textures_system(
             (*tile, textures.add(new_texture))
         })
         .collect();
-
-    state.set_next(GameState::Editor).unwrap();
 }
 
 fn alpha_blend_textures(mesh_texture: &Texture, tile_texture: &Texture) -> Texture {
