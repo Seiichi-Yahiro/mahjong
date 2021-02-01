@@ -282,7 +282,13 @@ pub fn exit_editor_system(key_input: Res<Input<KeyCode>>, mut state: ResMut<Stat
     }
 }
 
-pub fn clean_up_system(commands: &mut Commands, query: Query<Entity, With<EditorEntity>>) {
+pub fn clean_up_system(
+    commands: &mut Commands,
+    mut tile_grid_set: ResMut<TileGridSet>,
+    query: Query<Entity, With<EditorEntity>>,
+) {
+    tile_grid_set.clear();
+
     for entity in query.iter() {
         commands.despawn_recursive(entity);
     }

@@ -69,6 +69,14 @@ impl TileGridSet {
         self.set.remove(pos)
     }
 
+    pub fn clear(&mut self) {
+        self.set.clear();
+    }
+
+    pub fn len(&self) -> usize {
+        self.set.len()
+    }
+
     pub fn is_overlapping(&self, pos: GridPos) -> bool {
         for z in -1..=1 {
             for x in -1..=1 {
@@ -109,9 +117,5 @@ impl TileGridSet {
                 || (bottom && top_left && top_right)
                 || (top_left && top_right && bottom_left && bottom_right)
         }
-    }
-
-    pub fn len(&self) -> usize {
-        self.set.len()
     }
 }
