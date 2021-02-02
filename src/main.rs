@@ -1,9 +1,12 @@
 mod camera;
 mod clamped_value;
+mod menu;
 mod solitaire;
 mod table;
 mod tiles;
+mod ui;
 
+use crate::menu::MenuStateStagePlugin;
 use crate::solitaire::editor::EditorStateStagePlugin;
 use crate::solitaire::grid::{GridPos, TileGridSet};
 use bevy::asset::{HandleId, LoadState};
@@ -48,7 +51,8 @@ fn main() {
         .register_type::<GridPos>()
         .add_resource(TileGridSet::new())
         .add_resource(State::new(GameState::Loading))
-        .add_startup_system(create_ui_camera_system.system())
+        .add_startup_system(ui::create_ui_camera_system.system())
+        .add_startup_system(ui::load_ui_asset_data_system.system())
         .add_startup_system(table::load_table_asset_data_system.system())
         .add_startup_system(tiles::load_tile_asset_data_system.system())
         .add_stage_after(
@@ -67,13 +71,10 @@ fn main() {
                         .with_system(table::spawn_table_system.system())
                         .with_system(tiles::blend_tile_textures_system.system()),
                 )
+                .add_plugin(MenuStateStagePlugin)
                 .add_plugin(EditorStateStagePlugin),
         )
         .run();
-}
-
-fn create_ui_camera_system(commands: &mut Commands) {
-    commands.spawn(CameraUiBundle::default());
 }
 
 fn create_light_system(commands: &mut Commands) {
@@ -97,7 +98,7 @@ fn check_load_state_system(
         }
         LoadState::Loaded => {
             loading_assets.0.clear();
-            state.set_next(GameState::Editor).unwrap();
+            state.set_next(GameState::Menu).unwrap();
         }
         LoadState::Failed => {
             panic!("Failed to load assets!");

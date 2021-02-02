@@ -1,6 +1,7 @@
 use crate::solitaire::grid::{GridPos, TileGridSet};
 use crate::table::Table;
 use crate::tiles::{TileAssetData, NUMBER_OF_TILES_WITH_BONUS};
+use crate::ui::UiAssetData;
 use crate::{camera, GameState, StateStagePlugin};
 use bevy::prelude::*;
 use bevy::reflect::TypeRegistry;
@@ -228,9 +229,7 @@ fn undo_system(
 
 struct RemainingTilesText;
 
-fn create_ui_system(commands: &mut Commands, asset_server: Res<AssetServer>) {
-    let font = asset_server.load("fonts/FiraSans-Regular.ttf");
-
+fn create_ui_system(commands: &mut Commands, ui_asset_data: Res<UiAssetData>) {
     commands
         .spawn(TextBundle {
             node: Default::default(),
@@ -246,7 +245,7 @@ fn create_ui_system(commands: &mut Commands, asset_server: Res<AssetServer>) {
             },
             text: Text {
                 value: NUMBER_OF_TILES_WITH_BONUS.to_string(),
-                font,
+                font: ui_asset_data.get_font(),
                 style: TextStyle {
                     font_size: 50.0,
                     color: Color::WHITE,
