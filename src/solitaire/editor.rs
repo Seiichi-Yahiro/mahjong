@@ -1,10 +1,10 @@
 use crate::solitaire::grid::{GridPos, TileGridSet};
 use crate::table::Table;
 use crate::tiles::{TileAssetData, NUMBER_OF_TILES_WITH_BONUS};
-use crate::ui::UiAssetData;
 use crate::{camera, GameState, StateStagePlugin};
 use bevy::prelude::*;
 use bevy::reflect::TypeRegistry;
+use bevy_egui::{egui, EguiContext};
 use bevy_mod_picking::{Group, PickableMesh};
 
 pub struct EditorStateStagePlugin;
@@ -16,9 +16,7 @@ impl StateStagePlugin<GameState> for EditorStateStagePlugin {
         state_stage
             .set_enter_stage(
                 state,
-                SystemStage::parallel()
-                    .with_system(create_placeable_tile_system.system())
-                    .with_system(create_ui_system.system()),
+                SystemStage::parallel().with_system(create_placeable_tile_system.system()),
             )
             .set_update_stage(
                 state,
@@ -32,16 +30,15 @@ impl StateStagePlugin<GameState> for EditorStateStagePlugin {
                     .with_stage(
                         "2",
                         SystemStage::parallel()
+                            .with_system(ui_system.system())
                             .with_system(color_placeable_tile_system.system())
                             .with_system(place_tile_system.system())
-                            .with_system(exit_editor_system.system())
                             .with_system(camera::camera_movement_system.system()),
                     )
                     .with_stage(
                         "3",
                         SystemStage::serial()
                             .with_system(undo_system.system())
-                            .with_system(update_remaining_tiles_text_system.system())
                             .with_system(save_level_system.system()),
                     ),
             )
@@ -227,47 +224,27 @@ fn undo_system(
     }
 }
 
-struct RemainingTilesText;
+fn ui_system(_world: &mut World, resources: &mut Resources) {
+    let mut egui_context = resources.get_mut::<EguiContext>().unwrap();
+    let ctx = &mut egui_context.ctx;
+    egui::SidePanel::left("side_panel", 150.0).show(ctx, |ui| {
+        let tile_grid_set = resources.get::<TileGridSet>().unwrap();
+        ui.label(format!(
+            "Tiles: {}/{}",
+            tile_grid_set.len(),
+            NUMBER_OF_TILES_WITH_BONUS
+        ));
 
-fn create_ui_system(commands: &mut Commands, ui_asset_data: Res<UiAssetData>) {
-    commands
-        .spawn(TextBundle {
-            node: Default::default(),
-            style: Style {
-                align_self: AlignSelf::FlexStart,
-                position_type: PositionType::Absolute,
-                position: Rect {
-                    left: Val::Px(15.0),
-                    top: Val::Px(5.0),
-                    ..Default::default()
-                },
-                ..Default::default()
+        ui.with_layout(
+            egui::Layout::bottom_up(egui::Align::Center).with_cross_justify(true),
+            |ui| {
+                if ui.button("Back").clicked {
+                    let mut state = resources.get_mut::<State<GameState>>().unwrap();
+                    state.set_next(GameState::Menu).unwrap();
+                }
             },
-            text: Text {
-                value: NUMBER_OF_TILES_WITH_BONUS.to_string(),
-                font: ui_asset_data.get_font(),
-                style: TextStyle {
-                    font_size: 50.0,
-                    color: Color::WHITE,
-                    alignment: TextAlignment {
-                        horizontal: HorizontalAlign::Center,
-                        ..Default::default()
-                    },
-                },
-            },
-            ..Default::default()
-        })
-        .with(EditorEntity)
-        .with(RemainingTilesText);
-}
-
-fn update_remaining_tiles_text_system(
-    tile_grid_set: ChangedRes<TileGridSet>,
-    mut text_query: Query<&mut Text, With<RemainingTilesText>>,
-) {
-    for mut text in text_query.iter_mut() {
-        text.value = (NUMBER_OF_TILES_WITH_BONUS as usize - tile_grid_set.len()).to_string();
-    }
+        );
+    });
 }
 
 fn save_level_system(world: &mut World, resources: &mut Resources) {
@@ -314,12 +291,6 @@ fn save_level_system(world: &mut World, resources: &mut Resources) {
                 }
             },
         },
-    }
-}
-
-fn exit_editor_system(key_input: Res<Input<KeyCode>>, mut state: ResMut<State<GameState>>) {
-    if key_input.just_pressed(KeyCode::Escape) {
-        state.set_next(GameState::Menu).unwrap()
     }
 }
 

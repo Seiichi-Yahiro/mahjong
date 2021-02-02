@@ -4,7 +4,6 @@ mod menu;
 mod solitaire;
 mod table;
 mod tiles;
-mod ui;
 
 use crate::menu::MenuStateStagePlugin;
 use crate::solitaire::editor::EditorStateStagePlugin;
@@ -12,6 +11,7 @@ use crate::solitaire::grid::{GridPos, TileGridSet};
 use bevy::asset::{HandleId, LoadState};
 use bevy::prelude::*;
 use bevy_easings::EasingsPlugin;
+use bevy_egui::EguiPlugin;
 use bevy_mod_picking::PickingPlugin;
 
 pub trait StateStagePlugin<S> {
@@ -47,12 +47,11 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EasingsPlugin)
         .add_plugin(PickingPlugin)
+        .add_plugin(EguiPlugin)
         .init_resource::<LoadingAssets>()
         .register_type::<GridPos>()
         .add_resource(TileGridSet::new())
         .add_resource(State::new(GameState::Loading))
-        .add_startup_system(ui::create_ui_camera_system.system())
-        .add_startup_system(ui::load_ui_asset_data_system.system())
         .add_startup_system(table::load_table_asset_data_system.system())
         .add_startup_system(tiles::load_tile_asset_data_system.system())
         .add_stage_after(
