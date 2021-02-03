@@ -1,4 +1,3 @@
-use crate::LoadingAssets;
 use bevy::prelude::*;
 use bevy_mod_picking::PickableMesh;
 
@@ -24,18 +23,15 @@ impl TableAssetData {
     }
 }
 
-pub fn load_table_asset_data_system(
-    commands: &mut Commands,
-    asset_server: Res<AssetServer>,
-    mut loading_assets: ResMut<LoadingAssets>,
-) {
-    let mesh = asset_server.load("mesh/table.gltf#Mesh0/Primitive0");
-    let texture = asset_server.load("textures/table.png");
+impl FromResources for TableAssetData {
+    fn from_resources(resources: &Resources) -> Self {
+        let asset_server = resources.get::<AssetServer>().unwrap();
 
-    loading_assets.0.push(mesh.id);
-    loading_assets.0.push(texture.id);
+        let mesh = asset_server.load("mesh/table.gltf#Mesh0/Primitive0");
+        let texture = asset_server.load("textures/table.png");
 
-    commands.insert_resource(TableAssetData { mesh, texture });
+        Self { mesh, texture }
+    }
 }
 
 pub fn spawn_table_system(

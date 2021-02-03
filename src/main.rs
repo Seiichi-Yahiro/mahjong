@@ -9,7 +9,8 @@ use crate::menu::MenuStateStagePlugin;
 use crate::solitaire::editor::EditorStateStagePlugin;
 use crate::solitaire::grid::{GridPos, TileGridSet};
 use crate::solitaire::play::PlayStateStagePlugin;
-use bevy::asset::{HandleId, LoadState};
+use crate::table::TableAssetData;
+use crate::tiles::TileAssetData;
 use bevy::prelude::*;
 use bevy_easings::EasingsPlugin;
 use bevy_egui::EguiPlugin;
@@ -32,7 +33,6 @@ impl<S> StateStageExt<S> for StateStage<S> {
 
 #[derive(Debug, Clone, Copy)]
 pub enum GameState {
-    Loading,
     Menu,
     Play,
     Editor,
@@ -50,32 +50,23 @@ fn main() {
         .add_plugin(PickingPlugin)
         .add_plugin(InteractablePickingPlugin)
         .add_plugin(EguiPlugin)
-        .init_resource::<LoadingAssets>()
+        .init_resource::<TableAssetData>()
+        .init_resource::<TileAssetData>()
         .register_type::<GridPos>()
         .add_resource(TileGridSet::new())
-        .add_resource(State::new(GameState::Loading))
-        .add_startup_system(table::load_table_asset_data_system.system())
-        .add_startup_system(tiles::load_tile_asset_data_system.system())
+        .add_resource(State::new(GameState::Menu))
+        .add_startup_system(create_light_system.system())
+        .add_startup_system(camera::create_camera_system.system())
+        .add_startup_system(table::spawn_table_system.system())
         .add_stage_after(
             stage::UPDATE,
             "game_state",
             StateStage::<GameState>::default()
-                .with_update_stage(
-                    GameState::Loading,
-                    SystemStage::single(check_load_state_system.system()),
-                )
-                .with_exit_stage(
-                    GameState::Loading,
-                    SystemStage::parallel()
-                        .with_system(create_light_system.system())
-                        .with_system(camera::create_camera_system.system())
-                        .with_system(table::spawn_table_system.system())
-                        .with_system(tiles::blend_tile_textures_system.system()),
-                )
                 .add_plugin(MenuStateStagePlugin)
                 .add_plugin(PlayStateStagePlugin)
                 .add_plugin(EditorStateStagePlugin),
         )
+        .add_system_to_stage(stage::POST_UPDATE, tiles::add_tile_material_system.system())
         .run();
 }
 
@@ -84,26 +75,4 @@ fn create_light_system(commands: &mut Commands) {
         transform: Transform::from_translation(Vec3::new(0.0, 5.0, 4.0)),
         ..Default::default()
     });
-}
-
-#[derive(Default)]
-pub struct LoadingAssets(Vec<HandleId>);
-
-fn check_load_state_system(
-    asset_server: Res<AssetServer>,
-    mut loading_assets: ResMut<LoadingAssets>,
-    mut state: ResMut<State<GameState>>,
-) {
-    match asset_server.get_group_load_state(loading_assets.0.iter().cloned()) {
-        LoadState::NotLoaded | LoadState::Loading => {
-            return;
-        }
-        LoadState::Loaded => {
-            loading_assets.0.clear();
-            state.set_next(GameState::Menu).unwrap();
-        }
-        LoadState::Failed => {
-            panic!("Failed to load assets!");
-        }
-    };
 }

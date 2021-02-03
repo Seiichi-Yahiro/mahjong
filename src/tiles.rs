@@ -1,4 +1,3 @@
-use crate::LoadingAssets;
 use bevy::ecs::bevy_utils::HashMap;
 use bevy::prelude::*;
 use bevy::utils::AHashExt;
@@ -273,6 +272,8 @@ impl Plant {
     }
 }
 
+pub struct TileMaterial(pub Tile);
+
 pub struct TileAssetData {
     mesh: Handle<Mesh>,
     mesh_texture: Handle<Texture>,
@@ -292,105 +293,114 @@ impl TileAssetData {
     pub fn get_mesh_texture(&self) -> Handle<Texture> {
         self.mesh_texture.clone()
     }
+}
 
-    pub fn get_texture(&self, tile: Tile) -> Handle<Texture> {
-        self.textures.get(&tile.into()).unwrap().clone()
+impl FromResources for TileAssetData {
+    fn from_resources(resources: &Resources) -> Self {
+        let asset_server = resources.get::<AssetServer>().unwrap();
+
+        let mesh = asset_server.load("mesh/tile.gltf#Mesh0/Primitive0");
+        let mesh_texture = asset_server.load("textures/tile.png");
+
+        let covers = [
+            (Tile::Suit(Suit::Dot(Number::One)), "dots/1"),
+            (Tile::Suit(Suit::Dot(Number::Two)), "dots/2"),
+            (Tile::Suit(Suit::Dot(Number::Three)), "dots/3"),
+            (Tile::Suit(Suit::Dot(Number::Four)), "dots/4"),
+            (Tile::Suit(Suit::Dot(Number::Five)), "dots/5"),
+            (Tile::Suit(Suit::Dot(Number::Six)), "dots/6"),
+            (Tile::Suit(Suit::Dot(Number::Seven)), "dots/7"),
+            (Tile::Suit(Suit::Dot(Number::Eight)), "dots/8"),
+            (Tile::Suit(Suit::Dot(Number::Nine)), "dots/9"),
+            (Tile::Suit(Suit::Bamboo(Number::One)), "bamboos/1"),
+            (Tile::Suit(Suit::Bamboo(Number::Two)), "bamboos/2"),
+            (Tile::Suit(Suit::Bamboo(Number::Three)), "bamboos/3"),
+            (Tile::Suit(Suit::Bamboo(Number::Four)), "bamboos/4"),
+            (Tile::Suit(Suit::Bamboo(Number::Five)), "bamboos/5"),
+            (Tile::Suit(Suit::Bamboo(Number::Six)), "bamboos/6"),
+            (Tile::Suit(Suit::Bamboo(Number::Seven)), "bamboos/7"),
+            (Tile::Suit(Suit::Bamboo(Number::Eight)), "bamboos/8"),
+            (Tile::Suit(Suit::Bamboo(Number::Nine)), "bamboos/9"),
+            (Tile::Suit(Suit::Char(Number::One)), "chars/1"),
+            (Tile::Suit(Suit::Char(Number::Two)), "chars/2"),
+            (Tile::Suit(Suit::Char(Number::Three)), "chars/3"),
+            (Tile::Suit(Suit::Char(Number::Four)), "chars/4"),
+            (Tile::Suit(Suit::Char(Number::Five)), "chars/5"),
+            (Tile::Suit(Suit::Char(Number::Six)), "chars/6"),
+            (Tile::Suit(Suit::Char(Number::Seven)), "chars/7"),
+            (Tile::Suit(Suit::Char(Number::Eight)), "chars/8"),
+            (Tile::Suit(Suit::Char(Number::Nine)), "chars/9"),
+            (Tile::Honor(Honor::Wind(Wind::East)), "winds/east"),
+            (Tile::Honor(Honor::Wind(Wind::South)), "winds/south"),
+            (Tile::Honor(Honor::Wind(Wind::West)), "winds/west"),
+            (Tile::Honor(Honor::Wind(Wind::North)), "winds/north"),
+            (Tile::Honor(Honor::Dragon(Dragon::White)), "dragons/white"),
+            (Tile::Honor(Honor::Dragon(Dragon::Green)), "dragons/green"),
+            (Tile::Honor(Honor::Dragon(Dragon::Red)), "dragons/red"),
+            (Tile::Bonus(Bonus::Season(Season::Spring)), "seasons/spring"),
+            (Tile::Bonus(Bonus::Season(Season::Summer)), "seasons/summer"),
+            (Tile::Bonus(Bonus::Season(Season::Fall)), "seasons/fall"),
+            (Tile::Bonus(Bonus::Season(Season::Winter)), "seasons/winter"),
+            (Tile::Bonus(Bonus::Plant(Plant::Plum)), "plants/plum"),
+            (Tile::Bonus(Bonus::Plant(Plant::Orchid)), "plants/orchid"),
+            (
+                Tile::Bonus(Bonus::Plant(Plant::Chrysanthemum)),
+                "plants/chrysanthemum",
+            ),
+            (Tile::Bonus(Bonus::Plant(Plant::Bamboo)), "plants/bamboo"),
+        ]
+        .iter()
+        .map(|(tile, path)| {
+            (
+                *tile,
+                asset_server.load(format!("textures/{}.png", path).as_str()),
+            )
+        })
+        .collect::<HashMap<_, _>>();
+
+        Self {
+            mesh,
+            mesh_texture,
+            covers,
+            textures: HashMap::new(),
+        }
     }
 }
 
-pub fn load_tile_asset_data_system(
+pub fn add_tile_material_system(
     commands: &mut Commands,
-    asset_server: Res<AssetServer>,
-    mut loading_assets: ResMut<LoadingAssets>,
-) {
-    let mesh = asset_server.load("mesh/tile.gltf#Mesh0/Primitive0");
-    let mesh_texture = asset_server.load("textures/tile.png");
-
-    loading_assets.0.push(mesh.id);
-    loading_assets.0.push(mesh_texture.id);
-
-    let covers = [
-        (Tile::Suit(Suit::Dot(Number::One)), "dots/1"),
-        (Tile::Suit(Suit::Dot(Number::Two)), "dots/2"),
-        (Tile::Suit(Suit::Dot(Number::Three)), "dots/3"),
-        (Tile::Suit(Suit::Dot(Number::Four)), "dots/4"),
-        (Tile::Suit(Suit::Dot(Number::Five)), "dots/5"),
-        (Tile::Suit(Suit::Dot(Number::Six)), "dots/6"),
-        (Tile::Suit(Suit::Dot(Number::Seven)), "dots/7"),
-        (Tile::Suit(Suit::Dot(Number::Eight)), "dots/8"),
-        (Tile::Suit(Suit::Dot(Number::Nine)), "dots/9"),
-        (Tile::Suit(Suit::Bamboo(Number::One)), "bamboos/1"),
-        (Tile::Suit(Suit::Bamboo(Number::Two)), "bamboos/2"),
-        (Tile::Suit(Suit::Bamboo(Number::Three)), "bamboos/3"),
-        (Tile::Suit(Suit::Bamboo(Number::Four)), "bamboos/4"),
-        (Tile::Suit(Suit::Bamboo(Number::Five)), "bamboos/5"),
-        (Tile::Suit(Suit::Bamboo(Number::Six)), "bamboos/6"),
-        (Tile::Suit(Suit::Bamboo(Number::Seven)), "bamboos/7"),
-        (Tile::Suit(Suit::Bamboo(Number::Eight)), "bamboos/8"),
-        (Tile::Suit(Suit::Bamboo(Number::Nine)), "bamboos/9"),
-        (Tile::Suit(Suit::Char(Number::One)), "chars/1"),
-        (Tile::Suit(Suit::Char(Number::Two)), "chars/2"),
-        (Tile::Suit(Suit::Char(Number::Three)), "chars/3"),
-        (Tile::Suit(Suit::Char(Number::Four)), "chars/4"),
-        (Tile::Suit(Suit::Char(Number::Five)), "chars/5"),
-        (Tile::Suit(Suit::Char(Number::Six)), "chars/6"),
-        (Tile::Suit(Suit::Char(Number::Seven)), "chars/7"),
-        (Tile::Suit(Suit::Char(Number::Eight)), "chars/8"),
-        (Tile::Suit(Suit::Char(Number::Nine)), "chars/9"),
-        (Tile::Honor(Honor::Wind(Wind::East)), "winds/east"),
-        (Tile::Honor(Honor::Wind(Wind::South)), "winds/south"),
-        (Tile::Honor(Honor::Wind(Wind::West)), "winds/west"),
-        (Tile::Honor(Honor::Wind(Wind::North)), "winds/north"),
-        (Tile::Honor(Honor::Dragon(Dragon::White)), "dragons/white"),
-        (Tile::Honor(Honor::Dragon(Dragon::Green)), "dragons/green"),
-        (Tile::Honor(Honor::Dragon(Dragon::Red)), "dragons/red"),
-        (Tile::Bonus(Bonus::Season(Season::Spring)), "seasons/spring"),
-        (Tile::Bonus(Bonus::Season(Season::Summer)), "seasons/summer"),
-        (Tile::Bonus(Bonus::Season(Season::Fall)), "seasons/fall"),
-        (Tile::Bonus(Bonus::Season(Season::Winter)), "seasons/winter"),
-        (Tile::Bonus(Bonus::Plant(Plant::Plum)), "plants/plum"),
-        (Tile::Bonus(Bonus::Plant(Plant::Orchid)), "plants/orchid"),
-        (
-            Tile::Bonus(Bonus::Plant(Plant::Chrysanthemum)),
-            "plants/chrysanthemum",
-        ),
-        (Tile::Bonus(Bonus::Plant(Plant::Bamboo)), "plants/bamboo"),
-    ]
-    .iter()
-    .map(|(tile, path)| {
-        let handle = asset_server.load(format!("textures/{}.png", path).as_str());
-
-        loading_assets.0.push(handle.id);
-
-        (*tile, handle)
-    })
-    .collect::<HashMap<_, _>>();
-
-    commands.insert_resource(TileAssetData {
-        mesh,
-        mesh_texture,
-        covers,
-        textures: HashMap::new(),
-    });
-}
-
-pub fn blend_tile_textures_system(
     mut tile_asset_data: ResMut<TileAssetData>,
     mut textures: ResMut<Assets<Texture>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    query: Query<(Entity, &TileMaterial)>,
 ) {
-    tile_asset_data.textures = tile_asset_data
-        .covers
-        .iter()
-        .map(|(tile, texture_handle)| {
-            let new_texture = {
-                let mesh_texture = textures.get(&tile_asset_data.mesh_texture).unwrap();
-                let tile_texture = textures.get(texture_handle.clone()).unwrap();
-                alpha_blend_textures(mesh_texture, tile_texture)
-            };
+    for (entity, TileMaterial(tile)) in query.iter() {
+        let blended_texture_handle = match tile_asset_data.textures.get(tile) {
+            None => {
+                let cover_handle = tile_asset_data.covers.get(tile).unwrap().clone();
 
-            (*tile, textures.add(new_texture))
-        })
-        .collect();
+                let mesh_texture = textures.get(tile_asset_data.get_mesh_texture());
+                let tile_texture = textures.get(cover_handle.clone());
+
+                match (mesh_texture, tile_texture) {
+                    (Some(mesh_texture), Some(tile_texture)) => {
+                        let blended_texture = alpha_blend_textures(mesh_texture, tile_texture);
+                        let handle = textures.add(blended_texture);
+                        tile_asset_data.textures.insert(*tile, handle.clone());
+                        Some(handle)
+                    }
+                    _ => None,
+                }
+            }
+            it => it.map(|it| it.clone()),
+        };
+
+        if let Some(blended_texture_handle) = blended_texture_handle {
+            let material = StandardMaterial::from(blended_texture_handle);
+            commands.insert_one(entity, materials.add(material));
+            commands.remove_one::<TileMaterial>(entity);
+        }
+    }
 }
 
 fn alpha_blend_textures(mesh_texture: &Texture, tile_texture: &Texture) -> Texture {

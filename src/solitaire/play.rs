@@ -1,5 +1,5 @@
 use crate::solitaire::grid::{GridPos, TileGridSet};
-use crate::tiles::{Bonus, Plant, Season, Tile, TileAssetData};
+use crate::tiles::{Bonus, Plant, Season, Tile, TileAssetData, TileMaterial};
 use crate::{camera, GameState, StateStagePlugin};
 use bevy::prelude::*;
 use bevy_mod_picking::{Group, HoverEvents, InteractableMesh, MouseDownEvents, PickableMesh};
@@ -62,7 +62,6 @@ impl Default for State {
 fn spawn_tiles(
     commands: &mut Commands,
     mut state: Local<State>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     tile_asset_data: Res<TileAssetData>,
     mut tile_grid_set: ResMut<TileGridSet>,
     query: Query<(Entity, &GridPos), Added<GridPos>>,
@@ -74,13 +73,12 @@ fn spawn_tiles(
 
         let pbr = PbrBundle {
             mesh: tile_asset_data.get_mesh(),
-            material: materials.add(StandardMaterial::from(tile_asset_data.get_texture(tile))),
             transform: Transform::from_translation(grid_pos.to_world()),
             ..Default::default()
         };
 
         commands.insert(entity, pbr);
-        commands.insert_one(entity, tile);
+        commands.insert(entity, (tile, TileMaterial(tile)));
     }
 }
 
