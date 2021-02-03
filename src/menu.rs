@@ -24,7 +24,9 @@ fn ui_system(
     let ctx = &mut egui_context.ctx;
     egui::SidePanel::left("side_panel", 150.0).show(ctx, |ui| {
         ui.vertical_centered_justified(|ui| {
-            if ui.button("Play").clicked {}
+            if ui.button("Play").clicked {
+                state.set_next(GameState::Play).unwrap();
+            }
 
             if ui.button("Editor").clicked {
                 state.set_next(GameState::Editor).unwrap();

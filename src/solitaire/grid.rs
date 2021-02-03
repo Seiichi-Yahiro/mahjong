@@ -118,4 +118,22 @@ impl TileGridSet {
                 || (top_left && top_right && bottom_left && bottom_right)
         }
     }
+
+    pub fn is_blocked(&self, GridPos { x, y, z }: GridPos) -> bool {
+        let has_tile_above = self.is_overlapping(GridPos::new(x, y + 1, z));
+
+        has_tile_above || {
+            let has_tile_left = (-1..=1)
+                .into_iter()
+                .map(|z_offset| GridPos::new(x - 2, y, z + z_offset))
+                .any(|grid_pos| self.set.contains(&grid_pos));
+
+            let has_tile_right = (-1..=1)
+                .into_iter()
+                .map(|z_offset| GridPos::new(x + 2, y, z + z_offset))
+                .any(|grid_pos| self.set.contains(&grid_pos));
+
+            has_tile_left && has_tile_right
+        }
+    }
 }

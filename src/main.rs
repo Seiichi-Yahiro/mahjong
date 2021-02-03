@@ -8,11 +8,12 @@ mod tiles;
 use crate::menu::MenuStateStagePlugin;
 use crate::solitaire::editor::EditorStateStagePlugin;
 use crate::solitaire::grid::{GridPos, TileGridSet};
+use crate::solitaire::play::PlayStateStagePlugin;
 use bevy::asset::{HandleId, LoadState};
 use bevy::prelude::*;
 use bevy_easings::EasingsPlugin;
 use bevy_egui::EguiPlugin;
-use bevy_mod_picking::PickingPlugin;
+use bevy_mod_picking::{InteractablePickingPlugin, PickingPlugin};
 
 pub trait StateStagePlugin<S> {
     fn build(&self, state_stage: &mut StateStage<S>);
@@ -47,6 +48,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EasingsPlugin)
         .add_plugin(PickingPlugin)
+        .add_plugin(InteractablePickingPlugin)
         .add_plugin(EguiPlugin)
         .init_resource::<LoadingAssets>()
         .register_type::<GridPos>()
@@ -71,6 +73,7 @@ fn main() {
                         .with_system(tiles::blend_tile_textures_system.system()),
                 )
                 .add_plugin(MenuStateStagePlugin)
+                .add_plugin(PlayStateStagePlugin)
                 .add_plugin(EditorStateStagePlugin),
         )
         .run();

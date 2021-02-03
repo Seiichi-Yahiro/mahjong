@@ -314,29 +314,28 @@ fn save_level(
 
     let scene = DynamicScene::from_world(&custom_world, type_registry);
 
+    // TODO bevy 0.4 cannot load scn.ron files
     match scene.serialize_ron(type_registry) {
         Err(err) => {
             error!("Failed to serialize level: {:?}!", err);
             Err(err.to_string())
         }
-        Ok(level) => {
-            match File::create(format!("assets/scenes/levels/custom/{}.scn.ron", file_name)) {
+        Ok(level) => match File::create(format!("assets/scenes/levels/custom/{}.scn", file_name)) {
+            Err(err) => {
+                error!("Failed to create file: {:?}!", err);
+                Err(err.to_string())
+            }
+            Ok(mut file) => match file.write_all(level.as_bytes()) {
                 Err(err) => {
-                    error!("Failed to create file: {:?}!", err);
+                    error!("Failed to write level to file {:?}!", err);
                     Err(err.to_string())
                 }
-                Ok(mut file) => match file.write_all(level.as_bytes()) {
-                    Err(err) => {
-                        error!("Failed to write level to file {:?}!", err);
-                        Err(err.to_string())
-                    }
-                    Ok(_) => {
-                        info!("Level successfully saved!");
-                        Ok(())
-                    }
-                },
-            }
-        }
+                Ok(_) => {
+                    info!("Level successfully saved!");
+                    Ok(())
+                }
+            },
+        },
     }
 }
 
