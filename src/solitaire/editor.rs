@@ -3,7 +3,7 @@ use crate::table::Table;
 use crate::tiles::{TileAssetData, NUMBER_OF_TILES_WITH_BONUS};
 use crate::{camera, GameState, StateStagePlugin};
 use bevy::prelude::*;
-use bevy::reflect::TypeRegistry;
+use bevy::reflect::{TypeRegistry, TypeRegistryArc};
 use bevy_egui::{egui, EguiContext};
 use bevy_mod_picking::{Group, PickableMesh};
 
@@ -16,7 +16,9 @@ impl StateStagePlugin<GameState> for EditorStateStagePlugin {
         state_stage
             .set_enter_stage(
                 state,
-                SystemStage::parallel().with_system(create_placeable_tile_system.system()),
+                SystemStage::parallel()
+                    .with_system(create_ui_state_system.system())
+                    .with_system(create_placeable_tile_system.system()),
             )
             .set_update_stage(
                 state,
@@ -35,12 +37,7 @@ impl StateStagePlugin<GameState> for EditorStateStagePlugin {
                             .with_system(place_tile_system.system())
                             .with_system(camera::camera_movement_system.system()),
                     )
-                    .with_stage(
-                        "3",
-                        SystemStage::serial()
-                            .with_system(undo_system.system())
-                            .with_system(save_level_system.system()),
-                    ),
+                    .with_stage("3", SystemStage::serial().with_system(undo_system.system())),
             )
             .set_exit_stage(state, SystemStage::single(clean_up_system.system()));
     }
@@ -224,16 +221,65 @@ fn undo_system(
     }
 }
 
-fn ui_system(_world: &mut World, resources: &mut Resources) {
+#[derive(Default)]
+struct UiState {
+    file_name: String,
+    save_result: Option<Result<(), String>>,
+    timer: Timer,
+}
+
+fn create_ui_state_system(commands: &mut Commands) {
+    commands.insert_resource(UiState::default());
+}
+
+fn ui_system(world: &mut World, resources: &mut Resources) {
+    let mut ui_state = resources.get_mut::<UiState>().unwrap();
     let mut egui_context = resources.get_mut::<EguiContext>().unwrap();
     let ctx = &mut egui_context.ctx;
+
     egui::SidePanel::left("side_panel", 150.0).show(ctx, |ui| {
-        let tile_grid_set = resources.get::<TileGridSet>().unwrap();
+        let placed_tiles = resources.get::<TileGridSet>().unwrap().len();
+
         ui.label(format!(
             "Tiles: {}/{}",
-            tile_grid_set.len(),
-            NUMBER_OF_TILES_WITH_BONUS
+            placed_tiles, NUMBER_OF_TILES_WITH_BONUS
         ));
+
+        ui.label("Filename:");
+        ui.horizontal(|ui| {
+            ui.text_edit_singleline(&mut ui_state.file_name);
+
+            let can_save = !ui_state.file_name.is_empty()
+                && placed_tiles == NUMBER_OF_TILES_WITH_BONUS as usize;
+
+            let button = egui::Button::new("💾").enabled(can_save);
+            if ui.add(button).clicked {
+                let type_registry = resources.get::<TypeRegistry>().unwrap();
+                ui_state.save_result = Some(save_level(world, &ui_state.file_name, &type_registry));
+                ui_state.timer = Timer::from_seconds(3.0, false);
+            }
+        });
+
+        if ui_state.save_result.is_some() {
+            ui_state
+                .timer
+                .tick(resources.get::<Time>().unwrap().delta_seconds());
+
+            if ui_state.timer.finished() {
+                ui_state.save_result = None;
+            } else {
+                let msg = match ui_state.save_result.as_ref().unwrap() {
+                    Ok(_) => "Saved successfully!",
+                    Err(err) => err,
+                };
+
+                let alpha = 1.0 - ui_state.timer.elapsed() / ui_state.timer.duration();
+                let color =
+                    egui::Color32::from_rgba_unmultiplied(160, 160, 160, (255.0 * alpha) as u8);
+                let label = egui::Label::new(msg).text_color(color);
+                ui.add(label);
+            }
+        }
 
         ui.with_layout(
             egui::Layout::bottom_up(egui::Align::Center).with_cross_justify(true),
@@ -247,20 +293,15 @@ fn ui_system(_world: &mut World, resources: &mut Resources) {
     });
 }
 
-fn save_level_system(world: &mut World, resources: &mut Resources) {
+fn save_level(
+    world: &World,
+    file_name: &str,
+    type_registry: &TypeRegistryArc,
+) -> Result<(), String> {
     use std::fs::File;
     use std::io::prelude::*;
 
-    let key_input = resources.get::<Input<KeyCode>>().unwrap();
-    let tile_grid_set = resources.get::<TileGridSet>().unwrap();
-
-    if !key_input.just_pressed(KeyCode::S)
-        || tile_grid_set.len() < NUMBER_OF_TILES_WITH_BONUS as usize
-    {
-        return;
-    }
-
-    info!("Saving scene!");
+    info!("Saving level!");
 
     let mut custom_world = World::new();
 
@@ -271,26 +312,31 @@ fn save_level_system(world: &mut World, resources: &mut Resources) {
         custom_world.spawn((*grid_pos,));
     }
 
-    let type_registry = resources.get::<TypeRegistry>().unwrap();
-    let scene = DynamicScene::from_world(&custom_world, &type_registry);
+    let scene = DynamicScene::from_world(&custom_world, type_registry);
 
-    match scene.serialize_ron(&type_registry) {
+    match scene.serialize_ron(type_registry) {
         Err(err) => {
-            error!("Failed to serialize scene: {:?}!", err);
+            error!("Failed to serialize level: {:?}!", err);
+            Err(err.to_string())
         }
-        Ok(level) => match File::create("assets/scenes/levels/custom/custom_level.scn.ron") {
-            Err(err) => {
-                error!("Failed to create file: {:?}!", err);
-            }
-            Ok(mut file) => match file.write_all(level.as_bytes()) {
+        Ok(level) => {
+            match File::create(format!("assets/scenes/levels/custom/{}.scn.ron", file_name)) {
                 Err(err) => {
-                    error!("Failed to write level to file {:?}!", err);
+                    error!("Failed to create file: {:?}!", err);
+                    Err(err.to_string())
                 }
-                Ok(_) => {
-                    info!("Scene successfully saved!");
-                }
-            },
-        },
+                Ok(mut file) => match file.write_all(level.as_bytes()) {
+                    Err(err) => {
+                        error!("Failed to write level to file {:?}!", err);
+                        Err(err.to_string())
+                    }
+                    Ok(_) => {
+                        info!("Level successfully saved!");
+                        Ok(())
+                    }
+                },
+            }
+        }
     }
 }
 
