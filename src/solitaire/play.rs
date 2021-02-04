@@ -2,8 +2,10 @@ use crate::solitaire::grid::{GridPos, TileGridSet};
 use crate::tiles::{Bonus, Tile, TileAssetData, TileMaterial};
 use crate::{camera, GameState, StateStagePlugin};
 use bevy::prelude::*;
+use bevy_egui::{egui, EguiContext};
 use bevy_mod_picking::{Group, HoverEvents, InteractableMesh, MouseDownEvents, PickableMesh};
 use rand::prelude::SliceRandom;
+use std::ops::Deref;
 
 pub struct PlayStateStagePlugin;
 
@@ -14,13 +16,14 @@ impl StateStagePlugin<GameState> for PlayStateStagePlugin {
         state_stage
             .set_enter_stage(
                 state,
-                SystemStage::parallel().with_system(load_level_system.system()),
+                SystemStage::parallel().with_system(load_levels_system.system()),
             )
             .set_update_stage(
                 state,
                 Schedule::default()
+                    .with_stage("1", SystemStage::single(ui_system.system()))
                     .with_stage(
-                        "1",
+                        "2",
                         SystemStage::parallel()
                             .with_system(spawn_tiles.system())
                             .with_system(select_system.system())
@@ -28,28 +31,25 @@ impl StateStagePlugin<GameState> for PlayStateStagePlugin {
                             .with_system(camera::camera_movement_system.system()),
                     )
                     .with_stage(
-                        "2",
+                        "3",
                         SystemStage::parallel()
                             .with_system(mark_selectable_tiles_system.system())
                             .with_system(color_tiles_system.system()),
                     ),
-            );
+            )
+            .set_exit_stage(state, SystemStage::single(clean_up_system.system()));
     }
 }
 
-fn load_level_system(asset_server: Res<AssetServer>, mut scene_spawner: ResMut<SceneSpawner>) {
-    // TODO bevy 0.4 cannot load scn.ron files
-    let scene_handle = asset_server.load("scenes/levels/turtle.scn");
-    scene_spawner.spawn_dynamic(scene_handle);
-}
-
-struct State {
+struct CurrentLevel {
+    scene: Handle<DynamicScene>,
     tiles: Vec<Tile>,
 }
 
-impl Default for State {
-    fn default() -> Self {
+impl CurrentLevel {
+    fn new(scene: Handle<DynamicScene>) -> Self {
         Self {
+            scene,
             tiles: {
                 let mut tiles = Tile::new_set(true);
                 tiles.shuffle(&mut rand::thread_rng());
@@ -59,26 +59,128 @@ impl Default for State {
     }
 }
 
+struct Levels {
+    pre_made: Vec<String>,
+    custom: Vec<String>,
+}
+
+fn load_levels_system(commands: &mut Commands) {
+    let pre_made = get_level_file_names_from_folder("assets/scenes/levels/pre_made");
+    let custom = get_level_file_names_from_folder("assets/scenes/levels/custom");
+
+    commands.insert_resource::<Option<CurrentLevel>>(None);
+    commands.insert_resource(Levels { pre_made, custom });
+}
+
+fn get_level_file_names_from_folder(folder: &str) -> Vec<String> {
+    use std::fs;
+    use std::path::Path;
+
+    match fs::read_dir(folder) {
+        Err(err) => {
+            error!("Failed to read level directory: {:?}", err);
+            Vec::new()
+        }
+        Ok(read_dir) => read_dir
+            .filter_map(|entry_result| {
+                entry_result
+                    .ok()
+                    .filter(|entry| {
+                        entry
+                            .file_type()
+                            .map(|file_type| file_type.is_file())
+                            .unwrap_or(false)
+                    })
+                    .filter(|entry| {
+                        Path::new(&entry.file_name())
+                            .extension()
+                            .map(|ext| ext == "scn")
+                            .unwrap_or(false)
+                    })
+                    .and_then(|entry| {
+                        Path::new(&entry.file_name())
+                            .file_stem()
+                            .and_then(|file_name| file_name.to_str())
+                            .map(|file_name| file_name.to_string())
+                    })
+            })
+            .collect(),
+    }
+}
+
+fn ui_system(_world: &mut World, resources: &mut Resources) {
+    let mut egui_context = resources.get_mut::<EguiContext>().unwrap();
+    let ctx = &mut egui_context.ctx;
+
+    egui::SidePanel::left("side_panel", 150.0).show(ctx, |ui| {
+        ui.collapsing("Levels", |ui| {
+            ui.vertical_centered_justified(|ui| {
+                let levels = resources.get::<Levels>().unwrap();
+                let mut current_level = resources.get_mut::<Option<CurrentLevel>>().unwrap();
+                let asset_server = resources.get::<AssetServer>().unwrap();
+                let mut scene_spawner = resources.get_mut::<SceneSpawner>().unwrap();
+
+                let mut for_file_name = |ui: &mut egui::Ui, folder: &str, file_name: &String| {
+                    if ui.button(file_name).clicked {
+                        if let Some(current_level) = current_level.deref() {
+                            scene_spawner.despawn(current_level.scene.clone());
+                        }
+
+                        let path = format!("scenes/levels/{}/{}.scn", folder, file_name);
+                        let scene_handle = asset_server.load(path.as_str());
+                        *current_level = Some(CurrentLevel::new(scene_handle.clone()));
+                        scene_spawner.spawn_dynamic(scene_handle);
+                    }
+                };
+
+                ui.collapsing("Premade", |ui| {
+                    levels
+                        .pre_made
+                        .iter()
+                        .for_each(|file_name| for_file_name(ui, "pre_made", file_name));
+                });
+
+                ui.collapsing("Custom", |ui| {
+                    levels
+                        .custom
+                        .iter()
+                        .for_each(|file_name| for_file_name(ui, "custom", file_name));
+                });
+            });
+        });
+
+        ui.with_layout(
+            egui::Layout::bottom_up(egui::Align::Center).with_cross_justify(true),
+            |ui| {
+                if ui.button("Back").clicked {
+                    let mut state = resources.get_mut::<State<GameState>>().unwrap();
+                    state.set_next(GameState::Menu).unwrap();
+                }
+            },
+        );
+    });
+}
+
 fn spawn_tiles(
     commands: &mut Commands,
-    mut state: Local<State>,
+    current_level: Res<Option<CurrentLevel>>,
     tile_asset_data: Res<TileAssetData>,
     mut tile_grid_set: ResMut<TileGridSet>,
     query: Query<(Entity, &GridPos), Added<GridPos>>,
 ) {
-    for (entity, grid_pos) in query.iter() {
-        tile_grid_set.insert(*grid_pos);
+    if let Some(current_level) = current_level.deref() {
+        for ((entity, grid_pos), &tile) in query.iter().zip(current_level.tiles.iter()) {
+            tile_grid_set.insert(*grid_pos);
 
-        let tile = state.tiles.pop().unwrap();
+            let pbr = PbrBundle {
+                mesh: tile_asset_data.get_mesh(),
+                transform: Transform::from_translation(grid_pos.to_world()),
+                ..Default::default()
+            };
 
-        let pbr = PbrBundle {
-            mesh: tile_asset_data.get_mesh(),
-            transform: Transform::from_translation(grid_pos.to_world()),
-            ..Default::default()
-        };
-
-        commands.insert(entity, pbr);
-        commands.insert(entity, (tile, TileMaterial(tile)));
+            commands.insert(entity, pbr);
+            commands.insert(entity, (tile, TileMaterial(tile)));
+        }
     }
 }
 
@@ -193,4 +295,17 @@ fn pair_check_system(
             commands.remove_one::<Selected>(second_entity);
         }
     }
+}
+
+fn clean_up_system(
+    mut current_level: ResMut<Option<CurrentLevel>>,
+    mut scene_spawner: ResMut<SceneSpawner>,
+    mut tile_grid_set: ResMut<TileGridSet>,
+) {
+    if let Some(current_level) = current_level.deref() {
+        scene_spawner.despawn(current_level.scene.clone());
+    }
+
+    *current_level = None;
+    tile_grid_set.clear();
 }
