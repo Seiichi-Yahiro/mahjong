@@ -1,5 +1,5 @@
 use crate::solitaire::grid::{GridPos, TileGridSet};
-use crate::tiles::{Bonus, Plant, Season, Tile, TileAssetData, TileMaterial};
+use crate::tiles::{Bonus, Tile, TileAssetData, TileMaterial};
 use crate::{camera, GameState, StateStagePlugin};
 use bevy::prelude::*;
 use bevy_mod_picking::{Group, HoverEvents, InteractableMesh, MouseDownEvents, PickableMesh};
@@ -177,20 +177,8 @@ fn pair_check_system(
         let (second_entity, &second_tile, second_grid_pos) = selected.next().unwrap();
 
         let is_pair = match (first_tile, second_tile) {
-            (Tile::Bonus(first), Tile::Bonus(second)) => match first {
-                Bonus::Season(season) => match season {
-                    Season::Spring => second == Bonus::Plant(Plant::Plum),
-                    Season::Summer => second == Bonus::Plant(Plant::Orchid),
-                    Season::Fall => second == Bonus::Plant(Plant::Chrysanthemum),
-                    Season::Winter => second == Bonus::Plant(Plant::Bamboo),
-                },
-                Bonus::Plant(plant) => match plant {
-                    Plant::Plum => second == Bonus::Season(Season::Spring),
-                    Plant::Orchid => second == Bonus::Season(Season::Summer),
-                    Plant::Chrysanthemum => second == Bonus::Season(Season::Fall),
-                    Plant::Bamboo => second == Bonus::Season(Season::Winter),
-                },
-            },
+            (Tile::Bonus(Bonus::Plant(_)), Tile::Bonus(Bonus::Plant(_)))
+            | (Tile::Bonus(Bonus::Season(_)), Tile::Bonus(Bonus::Season(_))) => true,
             (first, second) => first == second,
         };
 
