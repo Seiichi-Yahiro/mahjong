@@ -3,7 +3,7 @@ use crate::tiles::{Bonus, Tile, TileAssetData, TileMaterial};
 use crate::{camera, GameState, StateStagePlugin};
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
-use bevy_mod_picking::{Group, HoverEvents, InteractableMesh, MouseDownEvents, PickableMesh};
+use bevy_mod_picking::{Group, InteractableMesh, MouseDownEvents, PickableMesh};
 use rand::prelude::SliceRandom;
 use std::ops::Deref;
 
@@ -133,12 +133,15 @@ fn ui_system(_world: &mut World, resources: &mut Resources) {
                 let mut current_level = resources.get_mut::<Option<CurrentLevel>>().unwrap();
                 let asset_server = resources.get::<AssetServer>().unwrap();
                 let mut scene_spawner = resources.get_mut::<SceneSpawner>().unwrap();
+                let mut tile_grid_set = resources.get_mut::<TileGridSet>().unwrap();
 
                 let mut for_file_name = |ui: &mut egui::Ui, folder: &str, file_name: &String| {
                     if ui.button(file_name).clicked {
                         if let Some(current_level) = current_level.deref() {
                             scene_spawner.despawn(current_level.scene.clone());
                         }
+
+                        tile_grid_set.clear();
 
                         let path = format!("scenes/levels/{}/{}.scn", folder, file_name);
                         let scene_handle = asset_server.load(path.as_str());
