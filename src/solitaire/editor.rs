@@ -213,7 +213,7 @@ fn undo_system(
         state.0.push((entity, grid_pos));
     }
 
-    if keyboard_input.just_pressed(KeyCode::U) {
+    if keyboard_input.pressed(KeyCode::LControl) && keyboard_input.just_pressed(KeyCode::Z) {
         if let Some((entity, grid_pos)) = state.0.pop() {
             tile_grid_set.remove(&grid_pos);
             commands.despawn(entity);
