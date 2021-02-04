@@ -1,0 +1,3170 @@
+[
+  (
+    entity: 0,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 1,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 2,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 3,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 4,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 5,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 6,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 7,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 8,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 9,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 10,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 11,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 12,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 13,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 14,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 15,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 16,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 17,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 18,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 19,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 20,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 21,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 22,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 23,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 24,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 25,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 26,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 27,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 28,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 29,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 30,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 31,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 32,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 33,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 34,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 35,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 36,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 37,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 38,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 39,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 40,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 41,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 42,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 43,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 44,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 45,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 46,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 47,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 48,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 49,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 50,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 51,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 52,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 53,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 54,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 55,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 56,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 57,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 58,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 59,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 60,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 61,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 62,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 63,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 64,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 65,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 66,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 67,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 68,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 3,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 69,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 3,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 70,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 71,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 72,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 73,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 74,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 75,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 76,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 77,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 78,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 79,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 80,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 81,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 82,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 83,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 84,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 85,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 86,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 87,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 88,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 89,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 90,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 91,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 92,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 93,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 94,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 95,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 96,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 97,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 98,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 99,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 100,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 101,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -8,
+          },
+          "y": {
+            "type": "i32",
+            "value": 0,
+          },
+          "z": {
+            "type": "i32",
+            "value": -7,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 102,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 103,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 104,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 105,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 106,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 107,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 108,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 109,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 110,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 111,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 112,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 113,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 114,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 115,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 116,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 117,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 118,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 119,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 5,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 120,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 121,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 122,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 123,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -6,
+          },
+          "y": {
+            "type": "i32",
+            "value": 1,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 124,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 125,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 126,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 127,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 128,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 129,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 130,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 131,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 132,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 133,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 134,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -4,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 135,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 2,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 136,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 3,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 137,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": -2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 3,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 138,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 3,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 139,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 2,
+          },
+          "y": {
+            "type": "i32",
+            "value": 3,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 140,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 3,
+          },
+          "z": {
+            "type": "i32",
+            "value": -3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 141,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 3,
+          },
+          "z": {
+            "type": "i32",
+            "value": 3,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 142,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 4,
+          },
+          "z": {
+            "type": "i32",
+            "value": 1,
+          },
+        },
+      },
+    ],
+  ),
+  (
+    entity: 143,
+    components: [
+      {
+        "type": "mahjong::solitaire::grid::GridPos",
+        "struct": {
+          "x": {
+            "type": "i32",
+            "value": 0,
+          },
+          "y": {
+            "type": "i32",
+            "value": 4,
+          },
+          "z": {
+            "type": "i32",
+            "value": -1,
+          },
+        },
+      },
+    ],
+  ),
+]
