@@ -16,7 +16,9 @@ impl StateStagePlugin<GameState> for PlayStateStagePlugin {
         state_stage
             .set_enter_stage(
                 state,
-                SystemStage::parallel().with_system(load_levels_system.system()),
+                SystemStage::parallel()
+                    .with_system(load_levels_system.system())
+                    .with_system(create_ui_state_system.system()),
             )
             .set_update_stage(
                 state,
@@ -108,11 +110,23 @@ fn get_level_file_names_from_folder(folder: &str) -> Vec<String> {
     }
 }
 
+#[derive(Default)]
+struct UiState {
+    mark_free_tiles: bool,
+}
+
+fn create_ui_state_system(commands: &mut Commands) {
+    commands.insert_resource(UiState::default());
+}
+
 fn ui_system(_world: &mut World, resources: &mut Resources) {
+    let mut ui_state = resources.get_mut::<UiState>().unwrap();
     let mut egui_context = resources.get_mut::<EguiContext>().unwrap();
     let ctx = &mut egui_context.ctx;
 
     egui::SidePanel::left("side_panel", 150.0).show(ctx, |ui| {
+        ui.checkbox(&mut ui_state.mark_free_tiles, "Mark free tiles");
+
         ui.collapsing("Levels", |ui| {
             ui.vertical_centered_justified(|ui| {
                 let levels = resources.get::<Levels>().unwrap();
@@ -224,7 +238,7 @@ fn select_system(
 
 fn color_tiles_system(
     mut materials: ResMut<Assets<StandardMaterial>>,
-    just_selected_query: Query<&Handle<StandardMaterial>, Added<Selected>>,
+    ui_state: Res<UiState>,
     query: Query<(
         &InteractableMesh,
         Option<&Selected>,
@@ -235,35 +249,14 @@ fn color_tiles_system(
     let hover_color = Color::rgb(0.3, 0.5, 0.8);
     let selected_color = Color::rgb(0.3, 0.8, 0.5);
 
-    for material_handle in just_selected_query.iter() {
-        if let Some(material) = materials.get_mut(material_handle) {
-            material.albedo = selected_color;
-        }
-    }
-
-    for entity in query.removed::<Selected>() {
-        if let Ok(material_handle) = query.get_component::<Handle<StandardMaterial>>(*entity) {
-            if let Some(material) = materials.get_mut(material_handle) {
-                material.albedo = default_color;
-            }
-        }
-    }
-
     for (interactable, selected, material_handle) in query.iter() {
         if let Some(material) = materials.get_mut(material_handle) {
-            match interactable.hover_event(&Group::default()).unwrap() {
-                HoverEvents::None => {}
-                HoverEvents::JustEntered => {
-                    material.albedo = hover_color;
-                }
-                HoverEvents::JustExited => {
-                    material.albedo = if selected.is_some() {
-                        selected_color
-                    } else {
-                        default_color
-                    }
-                }
-            }
+            material.albedo = match interactable.hover(&Group::default()).unwrap() {
+                _ if selected.is_some() => selected_color,
+                _ if ui_state.mark_free_tiles => hover_color,
+                true => hover_color,
+                false => default_color,
+            };
         }
     }
 }
