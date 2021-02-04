@@ -1,6 +1,8 @@
 use crate::table::TableAssetData;
 use crate::tiles::TileAssetData;
 use bevy::prelude::*;
+use rand::prelude::IteratorRandom;
+use std::collections::HashSet;
 
 const GRID_WIDTH: f32 = TileAssetData::WIDTH / 2.0;
 const GRID_HEIGHT: f32 = TileAssetData::DEPTH / 2.0;
@@ -49,7 +51,7 @@ impl GridPos {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct TileGridSet {
     set: std::collections::HashSet<GridPos>,
 }
@@ -135,5 +137,54 @@ impl TileGridSet {
 
             has_tile_left && has_tile_right
         }
+    }
+
+    pub fn best_effort_pairs(&self) -> Vec<(GridPos, GridPos)> {
+        let mut tile_grid_set = self.clone();
+        let mut pairs = Vec::new();
+
+        let mut free_tiles = HashSet::new();
+
+        loop {
+            free_tiles.extend(
+                tile_grid_set
+                    .set
+                    .iter()
+                    .cloned()
+                    .filter(|grid_pos| !tile_grid_set.is_blocked(*grid_pos)),
+            );
+
+            if free_tiles.len() < 2 {
+                break;
+            }
+
+            let random = free_tiles
+                .iter()
+                .cloned()
+                .choose_multiple(&mut rand::thread_rng(), 2);
+
+            let a = random[0];
+            let b = random[1];
+
+            tile_grid_set.remove(&a);
+            tile_grid_set.remove(&b);
+
+            free_tiles.remove(&a);
+            free_tiles.remove(&b);
+
+            pairs.push((a, b));
+        }
+
+        let mut first = None;
+
+        for grid_pos in tile_grid_set.set.into_iter() {
+            if let Some(first) = first.take() {
+                pairs.push((first, grid_pos));
+            } else {
+                first = Some(grid_pos);
+            }
+        }
+
+        pairs
     }
 }

@@ -17,7 +17,7 @@ pub enum Tile {
 }
 
 impl Tile {
-    pub fn new_set(with_bonus: bool) -> Vec<Self> {
+    pub fn new_normal_set() -> Vec<Self> {
         let dots = Number::iter().map(|num| Suit::Dot(num));
         let bamboos = Number::iter().map(|num| Suit::Bamboo(num));
         let chars = Number::iter().map(|num| Suit::Char(num));
@@ -27,17 +27,13 @@ impl Tile {
         let dragons = Dragon::iter().map(Honor::from);
         let honors = winds.chain(dragons).map(Tile::from);
 
-        let mut tiles = suits.chain(honors).collect::<Vec<Self>>().repeat(4);
+        suits.chain(honors).collect()
+    }
 
-        if with_bonus {
-            let seasons = Season::iter().map(Bonus::from);
-            let plants = Plant::iter().map(Bonus::from);
-            let bonus = seasons.chain(plants).map(Tile::from);
-
-            tiles.extend(bonus);
-        }
-
-        tiles
+    pub fn new_bonus_set() -> Vec<Self> {
+        let seasons = Season::iter().map(Bonus::from);
+        let plants = Plant::iter().map(Bonus::from);
+        seasons.chain(plants).map(Tile::from).collect()
     }
 }
 
@@ -68,6 +64,18 @@ impl From<Wind> for Tile {
 impl From<Dragon> for Tile {
     fn from(dragon: Dragon) -> Self {
         Tile::Honor(dragon.into())
+    }
+}
+
+impl From<Season> for Tile {
+    fn from(season: Season) -> Self {
+        Tile::Bonus(season.into())
+    }
+}
+
+impl From<Plant> for Tile {
+    fn from(plant: Plant) -> Self {
+        Tile::Bonus(plant.into())
     }
 }
 

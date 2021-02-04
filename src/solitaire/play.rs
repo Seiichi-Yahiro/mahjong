@@ -1,7 +1,8 @@
 use crate::solitaire::grid::{GridPos, TileGridSet};
-use crate::tiles::{Bonus, Tile, TileAssetData, TileMaterial};
+use crate::tiles::{Bonus, Plant, Season, Tile, TileAssetData, TileMaterial};
 use crate::{camera, GameState, StateStagePlugin};
 use bevy::prelude::*;
+use bevy::utils::HashMap;
 use bevy_egui::{egui, EguiContext};
 use bevy_mod_picking::{Group, InteractableMesh, MouseDownEvents, PickableMesh};
 use rand::prelude::SliceRandom;
@@ -45,19 +46,11 @@ impl StateStagePlugin<GameState> for PlayStateStagePlugin {
 
 struct CurrentLevel {
     scene: Handle<DynamicScene>,
-    tiles: Vec<Tile>,
 }
 
 impl CurrentLevel {
     fn new(scene: Handle<DynamicScene>) -> Self {
-        Self {
-            scene,
-            tiles: {
-                let mut tiles = Tile::new_set(true);
-                tiles.shuffle(&mut rand::thread_rng());
-                tiles
-            },
-        }
+        Self { scene }
     }
 }
 
@@ -180,25 +173,89 @@ fn ui_system(_world: &mut World, resources: &mut Resources) {
 
 fn spawn_tiles(
     commands: &mut Commands,
-    current_level: Res<Option<CurrentLevel>>,
     tile_asset_data: Res<TileAssetData>,
     mut tile_grid_set: ResMut<TileGridSet>,
     query: Query<(Entity, &GridPos), Added<GridPos>>,
 ) {
-    if let Some(current_level) = current_level.deref() {
-        for ((entity, grid_pos), &tile) in query.iter().zip(current_level.tiles.iter()) {
-            tile_grid_set.insert(*grid_pos);
+    let mut should_run = false;
 
-            let pbr = PbrBundle {
-                mesh: tile_asset_data.get_mesh(),
-                transform: Transform::from_translation(grid_pos.to_world()),
-                ..Default::default()
-            };
-
-            commands.insert(entity, pbr);
-            commands.insert(entity, (tile, TileMaterial(tile)));
-        }
+    for (_, grid_pos) in query.iter() {
+        tile_grid_set.insert(*grid_pos);
+        should_run = true;
     }
+
+    if !should_run {
+        return;
+    }
+
+    let pairs = {
+        let grid_pairs = tile_grid_set.best_effort_pairs();
+        let tile_pairs = create_tile_pairs();
+        grid_pairs
+            .into_iter()
+            .zip(tile_pairs.into_iter())
+            .flat_map(|((g_a, g_b), (t_a, t_b))| {
+                std::iter::once((g_a, t_a)).chain(std::iter::once((g_b, t_b)))
+            })
+            .collect::<HashMap<_, _>>()
+    };
+
+    for (entity, grid_pos) in query.iter() {
+        let tile = *pairs.get(grid_pos).unwrap();
+
+        let pbr = PbrBundle {
+            mesh: tile_asset_data.get_mesh(),
+            transform: Transform::from_translation(grid_pos.to_world()),
+            ..Default::default()
+        };
+
+        commands.insert(entity, pbr);
+        commands.insert(entity, (tile, TileMaterial(tile)));
+    }
+}
+
+fn create_tile_pairs() -> Vec<(Tile, Tile)> {
+    let bonus_pairs = |mut bonus: [Bonus; 4]| {
+        bonus.shuffle(&mut rand::thread_rng());
+
+        let [a, b, c, d] = bonus;
+
+        std::iter::once((a, b))
+            .chain(std::iter::once((c, d)))
+            .map(|(a, b)| (Tile::from(a), Tile::from(b)))
+    };
+
+    let seasons = {
+        let seasons = [
+            Bonus::Season(Season::Spring),
+            Bonus::Season(Season::Summer),
+            Bonus::Season(Season::Fall),
+            Bonus::Season(Season::Winter),
+        ];
+        bonus_pairs(seasons)
+    };
+
+    let plants = {
+        let plants = [
+            Bonus::Plant(Plant::Plum),
+            Bonus::Plant(Plant::Orchid),
+            Bonus::Plant(Plant::Chrysanthemum),
+            Bonus::Plant(Plant::Bamboo),
+        ];
+
+        bonus_pairs(plants)
+    };
+
+    let mut tiles = Tile::new_normal_set()
+        .into_iter()
+        .flat_map(|tile| std::iter::repeat((tile, tile)).take(2))
+        .chain(seasons)
+        .chain(plants)
+        .collect::<Vec<_>>();
+
+    tiles.shuffle(&mut rand::thread_rng());
+
+    tiles
 }
 
 fn mark_selectable_tiles_system(
