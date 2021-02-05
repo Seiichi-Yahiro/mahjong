@@ -1,10 +1,13 @@
 use crate::solitaire::grid::{GridPos, TileGridSet};
-use crate::tiles::{Bonus, Plant, Season, Tile, TileAssetData, TileMaterial};
+use crate::tiles::{
+    Bonus, Plant, Season, Tile, TileAssetData, TileMaterial, NUMBER_OF_TILES_WITH_BONUS,
+};
 use crate::{camera, GameState, StateStagePlugin};
 use bevy::prelude::*;
-use bevy::utils::HashMap;
+use bevy::utils::{AHashExt, HashMap};
 use bevy_egui::{egui, EguiContext};
 use bevy_mod_picking::{Group, InteractableMesh, MouseDownEvents, PickableMesh};
+use itertools::Itertools;
 use rand::prelude::SliceRandom;
 use std::ops::Deref;
 
@@ -189,15 +192,16 @@ fn spawn_tiles(
     }
 
     let pairs = {
-        let grid_pairs = tile_grid_set.best_effort_pairs();
-        let tile_pairs = create_tile_pairs();
-        grid_pairs
-            .into_iter()
-            .zip(tile_pairs.into_iter())
-            .flat_map(|((g_a, g_b), (t_a, t_b))| {
-                std::iter::once((g_a, t_a)).chain(std::iter::once((g_b, t_b)))
-            })
-            .collect::<HashMap<_, _>>()
+        let grid_pairs = tile_grid_set.best_effort_pairs().into_iter();
+        let tile_pairs = create_tile_pairs().into_iter();
+        grid_pairs.zip(tile_pairs).fold(
+            HashMap::with_capacity(NUMBER_OF_TILES_WITH_BONUS as usize),
+            |mut acc, ((g_a, g_b), (t_a, t_b))| {
+                acc.insert(g_a, t_a);
+                acc.insert(g_b, t_b);
+                acc
+            },
+        )
     };
 
     for (entity, grid_pos) in query.iter() {
@@ -215,42 +219,18 @@ fn spawn_tiles(
 }
 
 fn create_tile_pairs() -> Vec<(Tile, Tile)> {
-    let bonus_pairs = |mut bonus: [Bonus; 4]| {
-        bonus.shuffle(&mut rand::thread_rng());
+    let mut seasons = Season::iter().map(Tile::from).collect_vec();
+    seasons.shuffle(&mut rand::thread_rng());
 
-        let [a, b, c, d] = bonus;
+    let mut plants = Plant::iter().map(Tile::from).collect_vec();
+    plants.shuffle(&mut rand::thread_rng());
 
-        std::iter::once((a, b))
-            .chain(std::iter::once((c, d)))
-            .map(|(a, b)| (Tile::from(a), Tile::from(b)))
-    };
-
-    let seasons = {
-        let seasons = [
-            Bonus::Season(Season::Spring),
-            Bonus::Season(Season::Summer),
-            Bonus::Season(Season::Fall),
-            Bonus::Season(Season::Winter),
-        ];
-        bonus_pairs(seasons)
-    };
-
-    let plants = {
-        let plants = [
-            Bonus::Plant(Plant::Plum),
-            Bonus::Plant(Plant::Orchid),
-            Bonus::Plant(Plant::Chrysanthemum),
-            Bonus::Plant(Plant::Bamboo),
-        ];
-
-        bonus_pairs(plants)
-    };
+    let bonus = seasons.into_iter().chain(plants.into_iter()).tuples();
 
     let mut tiles = Tile::new_normal_set()
         .into_iter()
         .flat_map(|tile| std::iter::repeat((tile, tile)).take(2))
-        .chain(seasons)
-        .chain(plants)
+        .chain(bonus)
         .collect::<Vec<_>>();
 
     tiles.shuffle(&mut rand::thread_rng());
