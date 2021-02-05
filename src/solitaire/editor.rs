@@ -240,6 +240,13 @@ fn ui_system(world: &mut World, resources: &mut Resources) {
     egui::SidePanel::left("side_panel", 150.0).show(ctx, |ui| {
         let placed_tiles = resources.get::<TileGridSet>().unwrap().len();
 
+        if let Some(GridPos { x, y, z }) = world
+            .query_filtered::<&GridPos, With<PlaceAbleTile>>()
+            .next()
+        {
+            ui.label(format!("Coordinates: {}, {}, {}", x, y, z));
+        }
+
         ui.label(format!(
             "Tiles: {}/{}",
             placed_tiles, NUMBER_OF_TILES_WITH_BONUS
