@@ -3,6 +3,7 @@ use crate::tiles::{
     Bonus, Plant, Season, Tile, TileAssetData, TileMaterial, NUMBER_OF_TILES_WITH_BONUS,
 };
 use crate::{camera, GameState, StateStagePlugin};
+use bevy::ecs::ShouldRun;
 use bevy::prelude::*;
 use bevy::utils::{AHashExt, HashMap};
 use bevy_egui::{egui, EguiContext};
@@ -27,11 +28,16 @@ impl StateStagePlugin<GameState> for PlayStateStagePlugin {
             .set_update_stage(
                 state,
                 Schedule::default()
-                    .with_stage("1", SystemStage::single(ui_system.system()))
+                    .with_stage(
+                        "1",
+                        SystemStage::serial()
+                            .with_system(ui_system.system())
+                            .with_system(spawn_tiles.system()),
+                    )
                     .with_stage(
                         "2",
                         SystemStage::parallel()
-                            .with_system(spawn_tiles.system())
+                            .with_run_criteria(ui_block_system.system())
                             .with_system(select_system.system())
                             .with_system(pair_check_system.system())
                             .with_system(camera::camera_movement_system.system()),
@@ -44,6 +50,14 @@ impl StateStagePlugin<GameState> for PlayStateStagePlugin {
                     ),
             )
             .set_exit_stage(state, SystemStage::single(clean_up_system.system()));
+    }
+}
+
+fn ui_block_system(egui_context: Res<EguiContext>) -> ShouldRun {
+    if egui_context.ctx.is_mouse_over_area() {
+        ShouldRun::No
+    } else {
+        ShouldRun::Yes
     }
 }
 
@@ -109,6 +123,7 @@ fn get_level_file_names_from_folder(folder: &str) -> Vec<String> {
 #[derive(Default)]
 struct UiState {
     mark_free_tiles: bool,
+    select_level_dialog: bool,
 }
 
 fn create_ui_state_system(commands: &mut Commands) {
@@ -120,58 +135,64 @@ fn ui_system(_world: &mut World, resources: &mut Resources) {
     let mut egui_context = resources.get_mut::<EguiContext>().unwrap();
     let ctx = &mut egui_context.ctx;
 
-    egui::SidePanel::left("side_panel", 150.0).show(ctx, |ui| {
-        ui.checkbox(&mut ui_state.mark_free_tiles, "Mark free tiles");
+    egui::TopPanel::top("top_panel").show(ctx, |ui| {
+        egui::menu::bar(ui, |ui| {
+            egui::menu::menu(ui, "Menu", |ui| {
+                if ui.button("Select level...").clicked {
+                    ui_state.select_level_dialog = true;
+                }
 
-        ui.collapsing("Levels", |ui| {
-            ui.vertical_centered_justified(|ui| {
-                let levels = resources.get::<Levels>().unwrap();
-                let mut current_level = resources.get_mut::<Option<CurrentLevel>>().unwrap();
-                let asset_server = resources.get::<AssetServer>().unwrap();
-                let mut scene_spawner = resources.get_mut::<SceneSpawner>().unwrap();
-                let mut tile_grid_set = resources.get_mut::<TileGridSet>().unwrap();
-
-                let mut for_file_name = |ui: &mut egui::Ui, folder: &str, file_name: &String| {
-                    if ui.button(file_name).clicked {
-                        if let Some(current_level) = current_level.deref() {
-                            scene_spawner.despawn(current_level.scene.clone());
-                        }
-
-                        tile_grid_set.clear();
-
-                        let path = format!("scenes/levels/{}/{}.scn", folder, file_name);
-                        let scene_handle = asset_server.load(path.as_str());
-                        *current_level = Some(CurrentLevel::new(scene_handle.clone()));
-                        scene_spawner.spawn_dynamic(scene_handle);
-                    }
-                };
-
-                ui.collapsing("Premade", |ui| {
-                    levels
-                        .pre_made
-                        .iter()
-                        .for_each(|file_name| for_file_name(ui, "pre_made", file_name));
-                });
-
-                ui.collapsing("Custom", |ui| {
-                    levels
-                        .custom
-                        .iter()
-                        .for_each(|file_name| for_file_name(ui, "custom", file_name));
-                });
-            });
-        });
-
-        ui.with_layout(
-            egui::Layout::bottom_up(egui::Align::Center).with_cross_justify(true),
-            |ui| {
-                if ui.button("Back").clicked {
+                if ui.button("Back to menu").clicked {
                     let mut state = resources.get_mut::<State<GameState>>().unwrap();
                     state.set_next(GameState::Menu).unwrap();
                 }
-            },
-        );
+            });
+
+            egui::menu::menu(ui, "Options", |ui| {
+                ui.checkbox(&mut ui_state.mark_free_tiles, "Mark free tiles");
+            });
+        });
     });
+
+    egui::Window::new("Select Level")
+        .scroll(true)
+        .open(&mut ui_state.select_level_dialog)
+        .show(ctx, |ui| {
+            let levels = resources.get::<Levels>().unwrap();
+            let mut current_level = resources.get_mut::<Option<CurrentLevel>>().unwrap();
+            let asset_server = resources.get::<AssetServer>().unwrap();
+            let mut scene_spawner = resources.get_mut::<SceneSpawner>().unwrap();
+            let mut tile_grid_set = resources.get_mut::<TileGridSet>().unwrap();
+
+            let mut for_file_name = |ui: &mut egui::Ui, folder: &str, file_name: &String| {
+                if ui.button(file_name).clicked {
+                    if let Some(current_level) = current_level.deref() {
+                        scene_spawner.despawn(current_level.scene.clone());
+                    }
+
+                    tile_grid_set.clear();
+
+                    let path = format!("scenes/levels/{}/{}.scn", folder, file_name);
+                    let scene_handle = asset_server.load(path.as_str());
+                    *current_level = Some(CurrentLevel::new(scene_handle.clone()));
+                    scene_spawner.spawn_dynamic(scene_handle);
+                }
+            };
+
+            ui.collapsing("Premade", |ui| {
+                levels
+                    .pre_made
+                    .iter()
+                    .for_each(|file_name| for_file_name(ui, "pre_made", file_name));
+            });
+
+            ui.collapsing("Custom", |ui| {
+                levels
+                    .custom
+                    .iter()
+                    .for_each(|file_name| for_file_name(ui, "custom", file_name));
+            });
+        });
 }
 
 fn spawn_tiles(
