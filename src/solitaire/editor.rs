@@ -2,6 +2,7 @@ use crate::solitaire::grid::{GridPos, TileGridSet};
 use crate::table::Table;
 use crate::tiles::{TileAssetData, NUMBER_OF_TILES_WITH_BONUS};
 use crate::{camera, GameState, StateStagePlugin};
+use bevy::ecs::ShouldRun;
 use bevy::prelude::*;
 use bevy::reflect::{TypeRegistry, TypeRegistryArc};
 use bevy_egui::{egui, EguiContext};
@@ -23,23 +24,35 @@ impl StateStagePlugin<GameState> for EditorStateStagePlugin {
             .set_update_stage(
                 state,
                 Schedule::default()
+                    .with_stage("ui", SystemStage::single(ui_system.system()))
                     .with_stage(
-                        "1",
-                        SystemStage::serial()
-                            .with_system(move_placeable_tile_system.system())
-                            .with_system(is_placeable_system.system()),
-                    )
-                    .with_stage(
-                        "2",
-                        SystemStage::parallel()
-                            .with_system(ui_system.system())
-                            .with_system(color_placeable_tile_system.system())
-                            .with_system(place_tile_system.system())
-                            .with_system(camera::camera_movement_system.system()),
-                    )
-                    .with_stage("3", SystemStage::serial().with_system(undo_system.system())),
+                        "other",
+                        Schedule::default()
+                            .with_run_criteria(ui_block_system.system())
+                            .with_stage(
+                                "1",
+                                SystemStage::parallel()
+                                    .with_system(move_placeable_tile_system.system())
+                                    .with_system(is_placeable_system.system())
+                                    .with_system(color_placeable_tile_system.system())
+                                    .with_system(place_tile_system.system())
+                                    .with_system(camera::camera_movement_system.system()),
+                            )
+                            .with_stage(
+                                "2",
+                                SystemStage::parallel().with_system(undo_system.system()),
+                            ),
+                    ),
             )
             .set_exit_stage(state, SystemStage::single(clean_up_system.system()));
+    }
+}
+
+fn ui_block_system(ui_state: Res<UiState>) -> ShouldRun {
+    if ui_state.dialog.is_some() {
+        ShouldRun::No
+    } else {
+        ShouldRun::Yes
     }
 }
 
@@ -221,11 +234,32 @@ fn undo_system(
     }
 }
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+enum Dialog {
+    Save,
+    Error,
+}
+
 #[derive(Default)]
 struct UiState {
     file_name: String,
-    save_result: Option<Result<(), String>>,
-    timer: Timer,
+    error_msg: String,
+    dialog: Option<Dialog>,
+}
+
+impl UiState {
+    fn open_dialog(&mut self, dialog: Dialog) {
+        self.dialog = Some(dialog);
+    }
+
+    fn close_dialog(&mut self) {
+        self.dialog = None;
+    }
+
+    fn error(&mut self, msg: String) {
+        self.error_msg = msg;
+        self.dialog = Some(Dialog::Error);
+    }
 }
 
 fn create_ui_state_system(commands: &mut Commands) {
@@ -237,8 +271,32 @@ fn ui_system(world: &mut World, resources: &mut Resources) {
     let mut egui_context = resources.get_mut::<EguiContext>().unwrap();
     let ctx = &mut egui_context.ctx;
 
-    egui::SidePanel::left("side_panel", 150.0).show(ctx, |ui| {
-        let placed_tiles = resources.get::<TileGridSet>().unwrap().len();
+    let placed_tiles = resources.get::<TileGridSet>().unwrap().len();
+
+    egui::TopPanel::top("top_panel").show(ctx, |ui| {
+        egui::menu::bar(ui, |ui| {
+            egui::menu::menu(ui, "File", |ui| {
+                let can_save = placed_tiles > 0
+                    && placed_tiles <= NUMBER_OF_TILES_WITH_BONUS as usize
+                    && placed_tiles % 2 == 0;
+                let save_button = egui::Button::new("Save as...").enabled(can_save);
+                if ui.add(save_button).clicked {
+                    ui_state.open_dialog(Dialog::Save);
+                }
+
+                if ui.button("Back to menu").clicked {
+                    let mut state = resources.get_mut::<State<GameState>>().unwrap();
+                    state.set_next(GameState::Menu).unwrap();
+                }
+            });
+        });
+    });
+
+    egui::Area::new("info").movable(false).show(ctx, |ui| {
+        ui.label(format!(
+            "Tiles: {}/{}",
+            placed_tiles, NUMBER_OF_TILES_WITH_BONUS
+        ));
 
         if let Some(GridPos { x, y, z }) = world
             .query_filtered::<&GridPos, With<PlaceAbleTile>>()
@@ -246,58 +304,58 @@ fn ui_system(world: &mut World, resources: &mut Resources) {
         {
             ui.label(format!("Coordinates: {}, {}, {}", x, y, z));
         }
+    });
 
-        ui.label(format!(
-            "Tiles: {}/{}",
-            placed_tiles, NUMBER_OF_TILES_WITH_BONUS
-        ));
+    if let Some(dialog) = ui_state.dialog {
+        match dialog {
+            Dialog::Save => {
+                egui::Window::new("💾 Save as")
+                    .collapsible(false)
+                    .fixed_size([250.0, 200.0])
+                    .show(ctx, |ui| {
+                        ui.label("Filename:");
+                        ui.text_edit_singleline(&mut ui_state.file_name);
 
-        ui.label("Filename:");
-        ui.horizontal(|ui| {
-            ui.text_edit_singleline(&mut ui_state.file_name);
+                        ui.separator();
 
-            let can_save = !ui_state.file_name.is_empty()
-                && placed_tiles == NUMBER_OF_TILES_WITH_BONUS as usize;
+                        ui.horizontal(|ui| {
+                            let can_save = !ui_state.file_name.is_empty();
+                            let save_button = egui::Button::new("Save").enabled(can_save);
+                            if ui.add(save_button).clicked {
+                                let type_registry = resources.get::<TypeRegistry>().unwrap();
 
-            let button = egui::Button::new("💾").enabled(can_save);
-            if ui.add(button).clicked {
-                let type_registry = resources.get::<TypeRegistry>().unwrap();
-                ui_state.save_result = Some(save_level(world, &ui_state.file_name, &type_registry));
-                ui_state.timer = Timer::from_seconds(3.0, false);
+                                match save_level(world, &ui_state.file_name, &type_registry) {
+                                    Ok(_) => ui_state.close_dialog(),
+                                    Err(msg) => {
+                                        ui_state.error(msg);
+                                    }
+                                }
+                            }
+
+                            if ui.button("Cancel").clicked {
+                                ui_state.close_dialog();
+                            }
+                        });
+                    });
             }
-        });
+            Dialog::Error => {
+                egui::Window::new("⁉ Error")
+                    .collapsible(false)
+                    .min_width(250.0)
+                    .show(ctx, |ui| {
+                        ui.horizontal_wrapped_for_text(egui::TextStyle::Body, |ui| {
+                            ui.label(&ui_state.error_msg);
+                        });
 
-        if ui_state.save_result.is_some() {
-            ui_state
-                .timer
-                .tick(resources.get::<Time>().unwrap().delta_seconds());
+                        ui.separator();
 
-            if ui_state.timer.finished() {
-                ui_state.save_result = None;
-            } else {
-                let msg = match ui_state.save_result.as_ref().unwrap() {
-                    Ok(_) => "Saved successfully!",
-                    Err(err) => err,
-                };
-
-                let alpha = 1.0 - ui_state.timer.elapsed() / ui_state.timer.duration();
-                let color =
-                    egui::Color32::from_rgba_unmultiplied(160, 160, 160, (255.0 * alpha) as u8);
-                let label = egui::Label::new(msg).text_color(color);
-                ui.add(label);
+                        if ui.button("Ok").clicked {
+                            ui_state.close_dialog();
+                        }
+                    });
             }
         }
-
-        ui.with_layout(
-            egui::Layout::bottom_up(egui::Align::Center).with_cross_justify(true),
-            |ui| {
-                if ui.button("Back").clicked {
-                    let mut state = resources.get_mut::<State<GameState>>().unwrap();
-                    state.set_next(GameState::Menu).unwrap();
-                }
-            },
-        );
-    });
+    }
 }
 
 fn save_level(
