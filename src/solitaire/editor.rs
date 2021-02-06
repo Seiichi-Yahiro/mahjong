@@ -243,6 +243,7 @@ enum Dialog {
 #[derive(Default)]
 struct UiState {
     file_name: String,
+    can_save: bool,
     error_msg: String,
     dialog: Option<Dialog>,
 }
@@ -273,13 +274,14 @@ fn ui_system(world: &mut World, resources: &mut Resources) {
 
     let placed_tiles = resources.get::<TileGridSet>().unwrap().len();
 
+    ui_state.can_save = placed_tiles > 0
+        && placed_tiles <= NUMBER_OF_TILES_WITH_BONUS as usize
+        && placed_tiles % 2 == 0;
+
     egui::TopPanel::top("top_panel").show(ctx, |ui| {
         egui::menu::bar(ui, |ui| {
             egui::menu::menu(ui, "File", |ui| {
-                let can_save = placed_tiles > 0
-                    && placed_tiles <= NUMBER_OF_TILES_WITH_BONUS as usize
-                    && placed_tiles % 2 == 0;
-                let save_button = egui::Button::new("Save as...").enabled(can_save);
+                let save_button = egui::Button::new("Save as...").enabled(ui_state.can_save);
                 if ui.add(save_button).clicked {
                     ui_state.open_dialog(Dialog::Save);
                 }
@@ -293,10 +295,15 @@ fn ui_system(world: &mut World, resources: &mut Resources) {
     });
 
     egui::Area::new("info").movable(false).show(ctx, |ui| {
-        ui.label(format!(
-            "Tiles: {}/{}",
-            placed_tiles, NUMBER_OF_TILES_WITH_BONUS
-        ));
+        let color = if ui_state.can_save {
+            egui::Color32::GREEN
+        } else {
+            egui::Color32::RED
+        };
+        ui.colored_label(
+            color,
+            format!("Tiles: {}/{}", placed_tiles, NUMBER_OF_TILES_WITH_BONUS),
+        );
 
         if let Some(GridPos { x, y, z }) = world
             .query_filtered::<&GridPos, With<PlaceAbleTile>>()
