@@ -1,12 +1,15 @@
+mod tools;
+
+use crate::camera;
+use crate::solitaire::editor::tools::place_tool::PlaceAbleTile;
+use crate::solitaire::editor::tools::Tool;
 use crate::solitaire::grid::{GridPos, TileGridSet};
-use crate::table::Table;
-use crate::tiles::{TileAssetData, NUMBER_OF_TILES_WITH_BONUS};
-use crate::{camera, GameState, StateStagePlugin};
+use crate::tiles::NUMBER_OF_TILES_WITH_BONUS;
+use crate::{GameState, StateStageExt, StateStagePlugin};
 use bevy::ecs::ShouldRun;
 use bevy::prelude::*;
 use bevy::reflect::{TypeRegistry, TypeRegistryArc};
 use bevy_egui::{egui, EguiContext};
-use bevy_mod_picking::{Group, PickableMesh};
 
 pub struct EditorStateStagePlugin;
 
@@ -19,32 +22,35 @@ impl StateStagePlugin<GameState> for EditorStateStagePlugin {
                 state,
                 SystemStage::parallel()
                     .with_system(create_ui_state_system.system())
-                    .with_system(create_placeable_tile_system.system()),
+                    .with_system(tools::create_tool_state_system.system()),
             )
             .set_update_stage(
                 state,
                 Schedule::default()
                     .with_stage("ui", SystemStage::single(ui_system.system()))
                     .with_stage(
-                        "other",
+                        "input_based",
                         Schedule::default()
                             .with_run_criteria(ui_block_system.system())
                             .with_stage(
-                                "1",
-                                SystemStage::parallel()
-                                    .with_system(move_placeable_tile_system.system())
-                                    .with_system(is_placeable_system.system())
-                                    .with_system(color_placeable_tile_system.system())
-                                    .with_system(place_tile_system.system())
-                                    .with_system(camera::camera_movement_system.system()),
+                                "tool",
+                                StateStage::<Tool>::default()
+                                    .add_plugin(tools::select_tool::SelectToolStateStagePlugin)
+                                    .add_plugin(tools::place_tool::PlaceToolStateStagePlugin),
                             )
                             .with_stage(
-                                "2",
-                                SystemStage::parallel().with_system(undo_system.system()),
+                                "other",
+                                SystemStage::parallel()
+                                    .with_system(camera::camera_movement_system.system()),
                             ),
                     ),
             )
-            .set_exit_stage(state, SystemStage::single(clean_up_system.system()));
+            .set_exit_stage(
+                state,
+                SystemStage::parallel()
+                    .with_system(clean_up_system.system())
+                    .with_system(tools::place_tool::clean_up_system.system()),
+            );
     }
 }
 
@@ -56,183 +62,7 @@ fn ui_block_system(ui_state: Res<UiState>) -> ShouldRun {
     }
 }
 
-struct EditorEntity;
-
-const ALPHA_VALUE: f32 = 0.3;
-
-fn white_color() -> Color {
-    Color::rgba(1.0, 1.0, 1.0, ALPHA_VALUE)
-}
-
-fn red_color() -> Color {
-    Color::rgba(1.0, 0.0, 0.0, ALPHA_VALUE)
-}
-
-struct PlaceAbleTile(bool);
 struct PlacedTile;
-
-fn create_placeable_tile_system(
-    commands: &mut Commands,
-    tile_asset_data: Res<TileAssetData>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    let material = StandardMaterial {
-        albedo: white_color(),
-        albedo_texture: Some(tile_asset_data.get_mesh_texture()),
-        shaded: true,
-    };
-
-    let pbr = PbrBundle {
-        mesh: tile_asset_data.get_mesh(),
-        material: materials.add(material),
-        visible: Visible {
-            is_visible: true,
-            is_transparent: true,
-        },
-        transform: Transform::from_translation(Vec3::unit_y() * TileAssetData::HEIGHT / 2.0),
-        ..Default::default()
-    };
-
-    commands
-        .spawn(pbr)
-        .with(EditorEntity)
-        .with(PlaceAbleTile(true))
-        .with(GridPos::default());
-}
-
-fn move_placeable_tile_system(
-    tile_grid_set: Res<TileGridSet>,
-    table_query: Query<&PickableMesh, With<Table>>,
-    mut placeable_tile_query: Query<(&mut Transform, &mut GridPos), With<PlaceAbleTile>>,
-) {
-    let intersection = table_query
-        .iter()
-        .next()
-        .unwrap()
-        .intersection(&Group::default())
-        .unwrap();
-
-    if let Some(mouse_pos) = intersection.map(|it| it.position().clone()) {
-        for (mut transform, mut grid_pos) in placeable_tile_query.iter_mut() {
-            *grid_pos = {
-                let mut new_grid_pos = GridPos::from_world(mouse_pos);
-
-                while tile_grid_set.is_overlapping(new_grid_pos) {
-                    new_grid_pos = GridPos {
-                        y: new_grid_pos.y + 1,
-                        ..new_grid_pos
-                    }
-                }
-
-                new_grid_pos
-            };
-
-            transform.translation = grid_pos.to_world();
-        }
-    }
-}
-
-fn is_placeable_system(
-    tile_grid_set: Res<TileGridSet>,
-    mut placeable_tile_query: Query<(&mut PlaceAbleTile, &GridPos)>,
-) {
-    for (mut placeable_tile, &grid_pos) in placeable_tile_query.iter_mut() {
-        placeable_tile.0 = tile_grid_set.len() < NUMBER_OF_TILES_WITH_BONUS as usize
-            && !tile_grid_set.is_overlapping(grid_pos)
-            && tile_grid_set.is_supported_from_below(grid_pos);
-    }
-}
-
-fn color_placeable_tile_system(
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    placeable_tile_query: Query<
-        (&Handle<StandardMaterial>, &PlaceAbleTile),
-        Changed<PlaceAbleTile>,
-    >,
-) {
-    for (material_handle, &PlaceAbleTile(is_placeable)) in placeable_tile_query.iter() {
-        let color = if is_placeable {
-            white_color()
-        } else {
-            red_color()
-        };
-
-        materials.get_mut(material_handle).unwrap().albedo = color;
-    }
-}
-
-fn place_tile_system(
-    commands: &mut Commands,
-    mouse_button_input: Res<Input<MouseButton>>,
-    tile_asset_data: Res<TileAssetData>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut tile_grid_set: ResMut<TileGridSet>,
-    table_query: Query<&PickableMesh, With<Table>>,
-    placeable_tile_query: Query<(&PlaceAbleTile, &GridPos)>,
-) {
-    if !mouse_button_input.just_pressed(MouseButton::Left) {
-        return;
-    }
-
-    let is_hovering_table = table_query
-        .iter()
-        .next()
-        .unwrap()
-        .intersection(&Group::default())
-        .unwrap()
-        .is_some();
-
-    if !is_hovering_table {
-        return;
-    }
-
-    for (&PlaceAbleTile(is_placeable), &grid_pos) in placeable_tile_query.iter() {
-        if is_placeable {
-            tile_grid_set.insert(grid_pos);
-            info!("Spawned tile at: {:?}!", grid_pos);
-
-            let pbr = PbrBundle {
-                mesh: tile_asset_data.get_mesh(),
-                material: materials.add(StandardMaterial::from(tile_asset_data.get_mesh_texture())),
-                transform: Transform::from_translation(grid_pos.to_world()),
-                ..Default::default()
-            };
-
-            commands
-                .spawn(pbr)
-                .with(EditorEntity)
-                .with(PlacedTile)
-                .with(grid_pos);
-        }
-    }
-}
-
-struct PlacementOrder(Vec<(Entity, GridPos)>);
-
-impl Default for PlacementOrder {
-    fn default() -> Self {
-        Self(Vec::with_capacity(NUMBER_OF_TILES_WITH_BONUS as usize))
-    }
-}
-
-fn undo_system(
-    commands: &mut Commands,
-    mut state: Local<PlacementOrder>,
-    keyboard_input: Res<Input<KeyCode>>,
-    mut tile_grid_set: ResMut<TileGridSet>,
-    query: Query<(Entity, &GridPos), Added<PlacedTile>>,
-) {
-    for (entity, &grid_pos) in query.iter() {
-        state.0.push((entity, grid_pos));
-    }
-
-    if keyboard_input.pressed(KeyCode::LControl) && keyboard_input.just_pressed(KeyCode::Z) {
-        if let Some((entity, grid_pos)) = state.0.pop() {
-            tile_grid_set.remove(&grid_pos);
-            commands.despawn(entity);
-        }
-    }
-}
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 enum Dialog {
@@ -278,7 +108,7 @@ fn ui_system(world: &mut World, resources: &mut Resources) {
         && placed_tiles <= NUMBER_OF_TILES_WITH_BONUS as usize
         && placed_tiles % 2 == 0;
 
-    egui::TopPanel::top("top_panel").show(ctx, |ui| {
+    egui::TopPanel::top("Menu_bar").show(ctx, |ui| {
         egui::menu::bar(ui, |ui| {
             egui::menu::menu(ui, "File", |ui| {
                 let save_button = egui::Button::new("Save as...").enabled(ui_state.can_save);
@@ -292,6 +122,20 @@ fn ui_system(world: &mut World, resources: &mut Resources) {
                 }
             });
         });
+    });
+
+    egui::TopPanel::top("Tools").show(ctx, |ui| {
+        let mut tool_state = resources.get_mut::<State<Tool>>().unwrap();
+        let mut current = *tool_state.current();
+
+        ui.horizontal(|ui| {
+            ui.selectable_value(&mut current, Tool::Select, "☝")
+                .on_hover_text("Select tiles");
+            ui.selectable_value(&mut current, Tool::Place, "🀄")
+                .on_hover_text("Place tiles");
+        });
+
+        tool_state.overwrite_next(current).ok();
     });
 
     egui::Area::new("info").movable(false).show(ctx, |ui| {
@@ -414,11 +258,11 @@ fn save_level(
 fn clean_up_system(
     commands: &mut Commands,
     mut tile_grid_set: ResMut<TileGridSet>,
-    query: Query<Entity, With<EditorEntity>>,
+    query: Query<Entity, With<PlacedTile>>,
 ) {
     tile_grid_set.clear();
 
     for entity in query.iter() {
-        commands.despawn_recursive(entity);
+        commands.despawn(entity);
     }
 }
