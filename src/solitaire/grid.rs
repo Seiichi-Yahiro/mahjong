@@ -31,11 +31,12 @@ impl GridPos {
         Self { x, y, z }
     }
 
-    pub fn from_world(Vec3 { x, z, .. }: Vec3) -> Self {
-        use bevy::math::*;
+    pub fn from_world(pos: Vec3) -> Self {
+        let x = pos.x;
+        let z = pos.z;
 
-        let x_mouse = clamp(x + HALF_GRID_WIDTH, -MAX_X + HALF_TILE_WIDTH, MAX_X);
-        let z_mouse = clamp(z + HALF_GRID_HEIGHT, -MAX_Z + HALF_TILE_DEPTH, MAX_Z);
+        let x_mouse = (x + HALF_GRID_WIDTH).clamp(-MAX_X + HALF_TILE_WIDTH, MAX_X);
+        let z_mouse = (z + HALF_GRID_HEIGHT).clamp(-MAX_Z + HALF_TILE_DEPTH, MAX_Z);
 
         let x_grid = (x_mouse / GRID_WIDTH).floor() as i32;
         let z_grid = (z_mouse / GRID_HEIGHT).floor() as i32;

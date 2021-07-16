@@ -1,24 +1,24 @@
-use crate::{GameState, StateStagePlugin};
+use crate::GameState;
 use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
 
-pub struct MenuStateStagePlugin;
+pub struct MenuStatePlugin;
 
-impl StateStagePlugin<GameState> for MenuStateStagePlugin {
-    fn build(&self, state_stage: &mut StateStage<GameState>) {
+impl Plugin for MenuStatePlugin {
+    fn build(&self, app: &mut AppBuilder) {
         let state = GameState::Menu;
 
-        state_stage.set_update_stage(
-            state,
-            SystemStage::parallel().with_system(ui_system.system()),
-        );
+        app.add_system_set(SystemSet::on_update(state).with_system(ui_system.system()));
     }
 }
 
-fn ui_system(_world: &mut World, resources: &mut Resources) {
-    let mut egui_context = resources.get_mut::<EguiContext>().unwrap();
-    let ctx = &mut egui_context.ctx;
+fn ui_system(
+    egui_ctx: ResMut<EguiContext>,
+    mut game_state: ResMut<State<GameState>>,
+    mut exit_events: EventWriter<AppExit>,
+) {
+    let ctx = egui_ctx.ctx();
 
     egui::Window::new("")
         .title_bar(false)
@@ -28,22 +28,19 @@ fn ui_system(_world: &mut World, resources: &mut Resources) {
         ))
         .show(ctx, |ui| {
             ui.vertical_centered_justified(|ui| {
-                let mut state = resources.get_mut::<State<GameState>>().unwrap();
-
-                if ui.button("Play").clicked {
-                    state.set_next(GameState::Play).unwrap();
+                if ui.button("Play").clicked() {
+                    game_state.set(GameState::Play).unwrap();
                 }
 
-                if ui.button("Editor").clicked {
-                    state.set_next(GameState::Editor).unwrap();
+                if ui.button("Editor").clicked() {
+                    game_state.set(GameState::Editor).unwrap();
                 }
             });
 
             ui.with_layout(
                 egui::Layout::bottom_up(egui::Align::Center).with_cross_justify(true),
                 |ui| {
-                    if ui.button("Exit").clicked {
-                        let mut exit_events = resources.get_mut::<Events<AppExit>>().unwrap();
+                    if ui.button("Exit").clicked() {
                         exit_events.send(AppExit);
                     }
                 },

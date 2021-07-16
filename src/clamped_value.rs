@@ -1,4 +1,3 @@
-use bevy::math::*;
 use std::ops;
 
 pub struct ClampedValue<T: PartialOrd + Copy> {
@@ -17,7 +16,13 @@ impl<T: PartialOrd + Copy> ClampedValue<T> {
     }
 
     pub fn assign(&mut self, value: T) {
-        self.value = clamp(value, self.min, self.max);
+        self.value = if value < self.min {
+            self.min
+        } else if value > self.max {
+            self.max
+        } else {
+            value
+        };
     }
 }
 

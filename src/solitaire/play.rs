@@ -2,59 +2,79 @@ use crate::solitaire::grid::{GridPos, TileGridSet};
 use crate::tiles::{
     Bonus, Plant, Season, Tile, TileAssetData, TileMaterial, NUMBER_OF_TILES_WITH_BONUS,
 };
-use crate::{camera, GameState, StateStagePlugin};
-use bevy::ecs::ShouldRun;
+use crate::{camera, GameState};
+use bevy::ecs::schedule::ShouldRun;
 use bevy::prelude::*;
-use bevy::utils::{AHashExt, HashMap};
 use bevy_egui::{egui, EguiContext};
-use bevy_mod_picking::{Group, InteractableMesh, MouseDownEvents, PickableMesh};
+use bevy_mod_picking::{Hover, PickableBundle, PickableMesh, PickingCamera};
 use itertools::Itertools;
 use rand::prelude::SliceRandom;
+use std::collections::HashMap;
 use std::ops::Deref;
 
-pub struct PlayStateStagePlugin;
+pub struct PlayStatePlugin;
 
-impl StateStagePlugin<GameState> for PlayStateStagePlugin {
-    fn build(&self, state_stage: &mut StateStage<GameState>) {
+impl Plugin for PlayStatePlugin {
+    fn build(&self, app: &mut AppBuilder) {
         let state = GameState::Play;
 
-        state_stage
-            .set_enter_stage(
-                state,
-                SystemStage::parallel()
+        app.init_resource::<UiState>()
+            .add_system_set(
+                SystemSet::on_enter(state)
                     .with_system(load_levels_system.system())
                     .with_system(create_ui_state_system.system()),
             )
-            .set_update_stage(
-                state,
-                Schedule::default()
-                    .with_stage(
-                        "1",
-                        SystemStage::serial()
-                            .with_system(ui_system.system())
-                            .with_system(spawn_tiles.system()),
+            .add_system_set(
+                SystemSet::on_update(state)
+                    //.with_run_criteria(ui_block_system.system())
+                    .with_system(select_system.system().label(SystemLabel::Select))
+                    .with_system(camera::camera_movement_system.system()),
+            )
+            .add_system_set(
+                SystemSet::on_update(state)
+                    .with_system(ui_system.system().label(SystemLabel::UI))
+                    .with_system(
+                        spawn_tiles
+                            .system()
+                            .label(SystemLabel::Spawn)
+                            .after(SystemLabel::UI),
                     )
-                    .with_stage(
-                        "2",
-                        SystemStage::parallel()
-                            .with_run_criteria(ui_block_system.system())
-                            .with_system(select_system.system())
-                            .with_system(pair_check_system.system())
-                            .with_system(camera::camera_movement_system.system()),
+                    .with_system(
+                        pair_check_system
+                            .system()
+                            .label(SystemLabel::PairCheck)
+                            .after(SystemLabel::Select),
                     )
-                    .with_stage(
-                        "3",
-                        SystemStage::parallel()
-                            .with_system(mark_selectable_tiles_system.system())
-                            .with_system(color_tiles_system.system()),
+                    .with_system(
+                        color_tiles_system
+                            .system()
+                            .label(SystemLabel::Color)
+                            .before(SystemLabel::PairCheck),
+                    )
+                    .with_system(
+                        mark_selectable_tiles_system
+                            .system()
+                            .label(SystemLabel::MarkSelectable)
+                            .before(SystemLabel::Select)
+                            .after(SystemLabel::Spawn),
                     ),
             )
-            .set_exit_stage(state, SystemStage::single(clean_up_system.system()));
+            .add_system_set(SystemSet::on_exit(state).with_system(clean_up_system.system()));
     }
 }
 
+#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemLabel)]
+enum SystemLabel {
+    UI,
+    Spawn,
+    Select,
+    PairCheck,
+    MarkSelectable,
+    Color,
+}
+
 fn ui_block_system(egui_context: Res<EguiContext>) -> ShouldRun {
-    if egui_context.ctx.is_mouse_over_area() {
+    if egui_context.ctx().is_pointer_over_area() {
         ShouldRun::No
     } else {
         ShouldRun::Yes
@@ -76,7 +96,7 @@ struct Levels {
     custom: Vec<String>,
 }
 
-fn load_levels_system(commands: &mut Commands) {
+fn load_levels_system(mut commands: Commands) {
     let pre_made = get_level_file_names_from_folder("assets/scenes/levels/pre_made");
     let custom = get_level_file_names_from_folder("assets/scenes/levels/custom");
 
@@ -126,25 +146,31 @@ struct UiState {
     select_level_dialog: bool,
 }
 
-fn create_ui_state_system(commands: &mut Commands) {
+fn create_ui_state_system(mut commands: Commands) {
     commands.insert_resource(UiState::default());
 }
 
-fn ui_system(_world: &mut World, resources: &mut Resources) {
-    let mut ui_state = resources.get_mut::<UiState>().unwrap();
-    let mut egui_context = resources.get_mut::<EguiContext>().unwrap();
-    let ctx = &mut egui_context.ctx;
+fn ui_system(
+    egui_ctx: ResMut<EguiContext>,
+    mut ui_state: ResMut<UiState>,
+    mut game_state: ResMut<State<GameState>>,
+    levels: Res<Levels>,
+    mut current_level: ResMut<Option<CurrentLevel>>,
+    asset_server: Res<AssetServer>,
+    mut scene_spawner: ResMut<SceneSpawner>,
+    mut tile_grid_set: ResMut<TileGridSet>,
+) {
+    let ctx = egui_ctx.ctx();
 
-    egui::TopPanel::top("top_panel").show(ctx, |ui| {
+    egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
         egui::menu::bar(ui, |ui| {
             egui::menu::menu(ui, "Menu", |ui| {
-                if ui.button("Select level...").clicked {
+                if ui.button("Select level...").clicked() {
                     ui_state.select_level_dialog = true;
                 }
 
-                if ui.button("Back to menu").clicked {
-                    let mut state = resources.get_mut::<State<GameState>>().unwrap();
-                    state.set_next(GameState::Menu).unwrap();
+                if ui.button("Back to menu").clicked() {
+                    game_state.set(GameState::Menu).unwrap();
                 }
             });
 
@@ -158,14 +184,8 @@ fn ui_system(_world: &mut World, resources: &mut Resources) {
         .scroll(true)
         .open(&mut ui_state.select_level_dialog)
         .show(ctx, |ui| {
-            let levels = resources.get::<Levels>().unwrap();
-            let mut current_level = resources.get_mut::<Option<CurrentLevel>>().unwrap();
-            let asset_server = resources.get::<AssetServer>().unwrap();
-            let mut scene_spawner = resources.get_mut::<SceneSpawner>().unwrap();
-            let mut tile_grid_set = resources.get_mut::<TileGridSet>().unwrap();
-
             let mut for_file_name = |ui: &mut egui::Ui, folder: &str, file_name: &String| {
-                if ui.button(file_name).clicked {
+                if ui.button(file_name).clicked() {
                     if let Some(current_level) = current_level.deref() {
                         scene_spawner.despawn(current_level.scene.clone());
                     }
@@ -195,8 +215,9 @@ fn ui_system(_world: &mut World, resources: &mut Resources) {
         });
 }
 
+// TODO ugly logic
 fn spawn_tiles(
-    commands: &mut Commands,
+    mut commands: Commands,
     tile_asset_data: Res<TileAssetData>,
     mut tile_grid_set: ResMut<TileGridSet>,
     query: Query<(Entity, &GridPos), Added<GridPos>>,
@@ -234,8 +255,10 @@ fn spawn_tiles(
             ..Default::default()
         };
 
-        commands.insert(entity, pbr);
-        commands.insert(entity, (tile, TileMaterial(tile)));
+        commands
+            .entity(entity)
+            .insert_bundle(pbr)
+            .insert_bundle((tile, TileMaterial(tile)));
     }
 }
 
@@ -260,16 +283,19 @@ fn create_tile_pairs() -> Vec<(Tile, Tile)> {
 }
 
 fn mark_selectable_tiles_system(
-    commands: &mut Commands,
-    tile_grid_set: ChangedRes<TileGridSet>,
+    mut commands: Commands,
+    tile_grid_set: Res<TileGridSet>,
     query: Query<(Entity, &GridPos)>,
 ) {
+    if !tile_grid_set.is_changed() {
+        return;
+    }
+
     for (entity, grid_pos) in query.iter() {
         if !tile_grid_set.is_blocked(*grid_pos) {
-            commands.insert(
-                entity,
-                (PickableMesh::default(), InteractableMesh::default()),
-            );
+            commands
+                .entity(entity)
+                .insert_bundle(PickableBundle::default());
         }
     }
 }
@@ -277,53 +303,53 @@ fn mark_selectable_tiles_system(
 struct Selected;
 
 fn select_system(
-    commands: &mut Commands,
+    mut commands: Commands,
     mouse_button_inputs: Res<Input<MouseButton>>,
-    query: Query<(Entity, &InteractableMesh, Option<&Selected>)>,
+    camera_query: Query<&PickingCamera>,
+    select_query: Query<Option<&Selected>, (With<PickableMesh>, With<Tile>)>,
 ) {
     if mouse_button_inputs.just_pressed(MouseButton::Left) {
-        for (entity, interactable, selected) in query.iter() {
-            if let MouseDownEvents::MouseJustPressed = interactable
-                .mouse_down_event(&Group::default(), MouseButton::Left)
-                .unwrap()
-            {
-                if selected.is_some() {
-                    commands.remove_one::<Selected>(entity);
-                } else {
-                    commands.insert_one(entity, Selected);
-                }
+        match camera_query.single() {
+            Err(err) => {
+                error!("{:?}", err);
             }
+            Ok(camera) => camera.intersect_top().iter().for_each(|(entity, _)| {
+                if let Ok(selected) = select_query.get(*entity) {
+                    if selected.is_some() {
+                        commands.entity(*entity).remove::<Selected>();
+                    } else {
+                        commands.entity(*entity).insert(Selected);
+                    }
+                };
+            }),
         }
     }
 }
 
+// TODO only on change
 fn color_tiles_system(
     mut materials: ResMut<Assets<StandardMaterial>>,
     ui_state: Res<UiState>,
-    query: Query<(
-        &InteractableMesh,
-        Option<&Selected>,
-        &Handle<StandardMaterial>,
-    )>,
+    query: Query<(&Hover, Option<&Selected>, &Handle<StandardMaterial>), With<Tile>>,
 ) {
-    let default_color = Color::WHITE;
-    let hover_color = Color::rgb(0.3, 0.5, 0.8);
-    let selected_color = Color::rgb(0.3, 0.8, 0.5);
+    const DEFAULT_COLOR: Color = Color::WHITE;
+    const HOVER_COLOR: Color = Color::rgb(0.3, 0.5, 0.8);
+    const SELECTED_COLOR: Color = Color::rgb(0.3, 0.8, 0.5);
 
-    for (interactable, selected, material_handle) in query.iter() {
+    for (hover, selected, material_handle) in query.iter() {
         if let Some(material) = materials.get_mut(material_handle) {
-            material.albedo = match interactable.hover(&Group::default()).unwrap() {
-                _ if selected.is_some() => selected_color,
-                _ if ui_state.mark_free_tiles => hover_color,
-                true => hover_color,
-                false => default_color,
+            material.base_color = match hover.hovered() {
+                _ if selected.is_some() => SELECTED_COLOR,
+                _ if ui_state.mark_free_tiles => HOVER_COLOR,
+                true => HOVER_COLOR,
+                false => DEFAULT_COLOR,
             };
         }
     }
 }
 
 fn pair_check_system(
-    commands: &mut Commands,
+    mut commands: Commands,
     mut tile_grid_set: ResMut<TileGridSet>,
     query: Query<(Entity, &Tile, &GridPos), With<Selected>>,
 ) {
@@ -342,11 +368,11 @@ fn pair_check_system(
             tile_grid_set.remove(first_grid_pos);
             tile_grid_set.remove(second_grid_pos);
 
-            commands.despawn(first_entity);
-            commands.despawn(second_entity);
+            commands.entity(first_entity).despawn();
+            commands.entity(second_entity).despawn();
         } else {
-            commands.remove_one::<Selected>(first_entity);
-            commands.remove_one::<Selected>(second_entity);
+            commands.entity(first_entity).remove::<Selected>();
+            commands.entity(second_entity).remove::<Selected>();
         }
     }
 }

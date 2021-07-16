@@ -1,6 +1,5 @@
-use bevy::ecs::bevy_utils::HashMap;
 use bevy::prelude::*;
-use bevy::utils::AHashExt;
+use std::collections::HashMap;
 
 pub const NUMBER_OF_TILE_WITHOUT_BONUS: u32 = (9 * 3 + 4 + 3) * 4;
 pub const NUMBER_OF_TILES_WITH_BONUS: u32 = NUMBER_OF_TILE_WITHOUT_BONUS + 2 * 4;
@@ -303,9 +302,9 @@ impl TileAssetData {
     }
 }
 
-impl FromResources for TileAssetData {
-    fn from_resources(resources: &Resources) -> Self {
-        let asset_server = resources.get::<AssetServer>().unwrap();
+impl FromWorld for TileAssetData {
+    fn from_world(world: &mut World) -> Self {
+        let asset_server = world.get_resource::<AssetServer>().unwrap();
 
         let mesh = asset_server.load("mesh/tile.gltf#Mesh0/Primitive0");
         let mesh_texture = asset_server.load("textures/tile.png");
@@ -376,7 +375,7 @@ impl FromResources for TileAssetData {
 }
 
 pub fn add_tile_material_system(
-    commands: &mut Commands,
+    mut commands: Commands,
     mut tile_asset_data: ResMut<TileAssetData>,
     mut textures: ResMut<Assets<Texture>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -404,9 +403,15 @@ pub fn add_tile_material_system(
         };
 
         if let Some(blended_texture_handle) = blended_texture_handle {
-            let material = StandardMaterial::from(blended_texture_handle);
-            commands.insert_one(entity, materials.add(material));
-            commands.remove_one::<TileMaterial>(entity);
+            let material = StandardMaterial {
+                base_color_texture: Some(blended_texture_handle),
+                roughness: 0.15,
+                ..Default::default()
+            };
+            commands
+                .entity(entity)
+                .insert(materials.add(material))
+                .remove::<TileMaterial>();
         }
     }
 }
