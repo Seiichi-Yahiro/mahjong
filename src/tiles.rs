@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::tasks::{AsyncComputeTaskPool, Task};
 use std::collections::HashMap;
 
 pub const NUMBER_OF_TILE_WITHOUT_BONUS: u32 = (9 * 3 + 4 + 3) * 4;
@@ -379,28 +380,31 @@ pub fn add_tile_material_system(
     mut tile_asset_data: ResMut<TileAssetData>,
     mut textures: ResMut<Assets<Texture>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    query: Query<(Entity, &TileMaterial)>,
+    thread_pool: Res<AsyncComputeTaskPool>,
+    mut query: Query<(Entity, &TileMaterial, Option<&mut Task<Texture>>)>,
 ) {
-    for (entity, TileMaterial(tile)) in query.iter() {
-        let blended_texture_handle = match tile_asset_data.textures.get(tile) {
-            None => {
-                let cover_handle = tile_asset_data.covers.get(tile).unwrap().clone();
+    for (entity, TileMaterial(tile), mut alpha_blend_texture_task) in query.iter_mut() {
+        let blended_texture_handle =
+            if let Some(mut alpha_blend_texture_task) = alpha_blend_texture_task {
+                use futures_lite::future;
 
-                let mesh_texture = textures.get(tile_asset_data.get_mesh_texture());
-                let tile_texture = textures.get(cover_handle.clone());
+                if let Some(blended_texture) =
+                    future::block_on(future::poll_once(&mut *alpha_blend_texture_task))
+                {
+                    let texture_handle = textures.add(blended_texture);
+                    tile_asset_data
+                        .textures
+                        .insert(*tile, texture_handle.clone());
 
-                match (mesh_texture, tile_texture) {
-                    (Some(mesh_texture), Some(tile_texture)) => {
-                        let blended_texture = alpha_blend_textures(mesh_texture, tile_texture);
-                        let handle = textures.add(blended_texture);
-                        tile_asset_data.textures.insert(*tile, handle.clone());
-                        Some(handle)
-                    }
-                    _ => None,
+                    commands.entity(entity).remove::<Task<Texture>>();
+
+                    Some(texture_handle)
+                } else {
+                    continue;
                 }
-            }
-            it => it.map(|it| it.clone()),
-        };
+            } else {
+                tile_asset_data.textures.get(tile).cloned()
+            };
 
         if let Some(blended_texture_handle) = blended_texture_handle {
             let material = StandardMaterial {
@@ -412,13 +416,22 @@ pub fn add_tile_material_system(
                 .entity(entity)
                 .insert(materials.add(material))
                 .remove::<TileMaterial>();
+        } else {
+            let cover_handle = tile_asset_data.covers.get(tile).unwrap().clone();
+
+            let mesh_texture = textures.get(tile_asset_data.get_mesh_texture()).cloned();
+            let tile_texture = textures.get(cover_handle.clone()).cloned();
+
+            if let (Some(mesh_texture), Some(tile_texture)) = (mesh_texture, tile_texture) {
+                let task = thread_pool
+                    .spawn(async move { alpha_blend_textures(mesh_texture, tile_texture) });
+                commands.entity(entity).insert(task);
+            }
         }
     }
 }
 
-fn alpha_blend_textures(mesh_texture: &Texture, tile_texture: &Texture) -> Texture {
-    let mut mesh_texture = mesh_texture.clone();
-
+fn alpha_blend_textures(mut mesh_texture: Texture, tile_texture: Texture) -> Texture {
     const COLOR_CHANNELS: usize = 4;
     let tile_height = tile_texture.size.height as usize;
     let tile_width = tile_texture.size.width as usize;
