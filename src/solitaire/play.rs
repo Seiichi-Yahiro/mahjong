@@ -164,7 +164,7 @@ fn ui_system(
 
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
         egui::menu::bar(ui, |ui| {
-            egui::menu::menu(ui, "Menu", |ui| {
+            egui::menu::menu_button(ui, "Menu", |ui| {
                 if ui.button("Select level...").clicked() {
                     ui_state.select_level_dialog = true;
                 }
@@ -174,14 +174,14 @@ fn ui_system(
                 }
             });
 
-            egui::menu::menu(ui, "Options", |ui| {
+            egui::menu::menu_button(ui, "Options", |ui| {
                 ui.checkbox(&mut ui_state.mark_free_tiles, "Mark free tiles");
             });
         });
     });
 
     egui::Window::new("Select Level")
-        .scroll(true)
+        .vscroll(true)
         .open(&mut ui_state.select_level_dialog)
         .show(ctx, |ui| {
             let mut for_file_name = |ui: &mut egui::Ui, folder: &str, file_name: &String| {

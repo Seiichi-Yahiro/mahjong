@@ -322,9 +322,10 @@ fn ui_system(
 
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
         egui::menu::bar(ui, |ui| {
-            egui::menu::menu(ui, "File", |ui| {
-                let save_button = egui::Button::new("Save as...").enabled(ui_state.can_save);
-                if ui.add(save_button).clicked() {
+            egui::menu::menu_button(ui, "File", |ui| {
+                let save_button = egui::Button::new("Save as...");
+
+                if ui.add_enabled(ui_state.can_save, save_button).clicked() {
                     ui_state.open_dialog(Dialog::Save);
                 }
 
@@ -370,8 +371,9 @@ fn ui_system(
 
                         ui.horizontal(|ui| {
                             let can_save = !ui_state.file_name.is_empty();
-                            let save_button = egui::Button::new("Save").enabled(can_save);
-                            if ui.add(save_button).clicked() {
+                            let save_button = egui::Button::new("Save");
+
+                            if ui.add_enabled(can_save, save_button).clicked() {
                                 match save_level(
                                     placed_tiles_query,
                                     &ui_state.file_name,

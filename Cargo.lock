@@ -410,9 +410,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_egui"
-version = "0.6.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6a1f976affbb86413e00eb2b387a8b4d5d831854413b991895ee5fbec511595"
+checksum = "c39707b49ae7d148d0d36f227986b6121368b06bd87aaaf7a5a9b6780dc23c08"
 dependencies = [
  "bevy",
  "clipboard",
@@ -1391,11 +1391,13 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
 name = "egui"
-version = "0.13.1"
+version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77f9b394ccacc0cccb30f6de7371038a116931aa3186acd908b9ec61f405f15c"
+checksum = "7c733356eb5f1139fdeedc370c00e9ea689c5d9120502c43925285bc7249a333"
 dependencies = [
+ "ahash 0.7.2",
  "epaint",
+ "nohash-hasher",
 ]
 
 [[package]]
@@ -1406,9 +1408,9 @@ checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
 name = "emath"
-version = "0.13.0"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80eea7508c08a7b4e2a041adcdca6f400d8606622c6bb980ecbbdc5f1aff9a4c"
+checksum = "55673de2eb96660dde25ba7b2d36a7054beead1a2bec74dcfd5eb05a1e1ba76d"
 
 [[package]]
 name = "env_logger"
@@ -1422,15 +1424,15 @@ dependencies = [
 
 [[package]]
 name = "epaint"
-version = "0.13.0"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "132e30d483d9fa252fe06aa112de777d068503c379fa51bc5834204ee3258fce"
+checksum = "adfd9296f7f92902e41c0e8e5deca6d2fb29f289c86d03a01ea01bd7498316c2"
 dependencies = [
  "ab_glyph",
  "ahash 0.7.2",
  "atomic_refcell",
  "emath",
- "ordered-float",
+ "nohash-hasher",
 ]
 
 [[package]]
@@ -2568,6 +2570,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "nohash-hasher"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2bf50223579dc7cdcfb3bfcacf7069ff68243f8c363f62ffa99cf000a6b9c451"
+
+[[package]]
 name = "nom"
 version = "5.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2755,15 +2763,6 @@ name = "once_cell"
 version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13bd41f508810a131401606d54ac32a467c97172d74ba7662562ebba5ad07fa0"
-
-[[package]]
-name = "ordered-float"
-version = "2.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "766f840da25490628d8e63e529cd21c014f6600c6b8517add12a6fa6167a6218"
-dependencies = [
- "num-traits",
-]
 
 [[package]]
 name = "owned_ttf_parser"
