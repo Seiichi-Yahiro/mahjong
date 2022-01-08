@@ -17,5 +17,5 @@ features = ["dynamic"]
 bevy_mod_picking = "0.4.0"
 bevy_egui = "0.6.0"
 rand = "0.8.4"
-itertools = "0.10.1"
+itertools = "0.10.3"
 futures-lite = "1.12.0"
