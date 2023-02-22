@@ -1,59 +1,117 @@
-mod camera;
-mod clamped_value;
-mod menu;
-mod solitaire;
-mod table;
-mod tiles;
+mod plugins;
 
-use crate::menu::MenuStatePlugin;
-use crate::solitaire::editor::EditorStatePlugin;
-use crate::solitaire::grid::{GridPos, TileGridSet};
-use crate::solitaire::play::PlayStatePlugin;
-use crate::table::TableAssetData;
-use crate::tiles::TileAssetData;
+use crate::plugins::assets::background::BackgroundAssetData;
+use crate::plugins::assets::tiles::asset::{TileAssetData, TileMaterial};
+use crate::plugins::assets::tiles::honor::Dragon;
+use bevy::log::LogPlugin;
 use bevy::prelude::*;
-use bevy_egui::EguiPlugin;
-use bevy_mod_picking::{InteractablePickingPlugin, PickingPlugin};
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
-pub enum GameState {
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+pub enum AppState {
+    AssetLoading,
     Menu,
-    Play,
-    Editor,
 }
 
 fn main() {
-    App::build()
-        .insert_resource(WindowDescriptor {
-            title: "Mahjong".to_string(),
-            ..Default::default()
-        })
-        .insert_resource(Msaa { samples: 8 })
-        .add_plugins(DefaultPlugins)
-        .add_plugin(PickingPlugin)
-        .add_plugin(InteractablePickingPlugin)
-        .add_plugin(EguiPlugin)
-        .init_resource::<TableAssetData>()
-        .init_resource::<TileAssetData>()
-        .register_type::<GridPos>()
-        .insert_resource(TileGridSet::new())
-        .add_state(GameState::Menu)
-        .add_startup_system(create_light_system.system())
-        .add_startup_system(camera::create_camera_system.system())
-        .add_startup_system(table::spawn_table_system.system())
-        .add_plugin(MenuStatePlugin)
-        .add_plugin(PlayStatePlugin)
-        .add_plugin(EditorStatePlugin)
-        .add_system_to_stage(
-            CoreStage::PostUpdate,
-            tiles::add_tile_material_system.system(),
+    App::new()
+        .insert_resource(Msaa { samples: 4 })
+        .add_plugins(
+            DefaultPlugins
+                .set(WindowPlugin {
+                    window: WindowDescriptor {
+                        title: "Mahjong".to_string(),
+                        ..default()
+                    },
+                    ..default()
+                })
+                .set(LogPlugin {
+                    filter: "info,wgpu_core=warn,wgpu_hal=error,mahjong=debug".into(),
+                    level: bevy::log::Level::DEBUG,
+                }),
+        )
+        .add_startup_system(setup_camera)
+        .add_startup_system(setup_light)
+        .add_state(AppState::AssetLoading)
+        .add_plugin(plugins::assets::AssetsPlugin)
+        .add_system_set(
+            SystemSet::on_enter(AppState::Menu)
+                .with_system(setup_background)
+                .with_system(setup_tile),
         )
         .run();
 }
 
-fn create_light_system(mut commands: Commands) {
-    commands.spawn().insert_bundle(LightBundle {
-        transform: Transform::from_xyz(0.0, 5.0, 4.0),
+fn setup_camera(mut commands: Commands) {
+    commands.spawn(Camera3dBundle {
+        transform: Transform::from_xyz(0.0, 0.25, 0.1)
+            .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
+        projection: PerspectiveProjection {
+            near: 0.01,
+            far: 10.0,
+            ..Default::default()
+        }
+        .into(),
         ..Default::default()
+    });
+}
+
+fn setup_light(mut commands: Commands) {
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            illuminance: 32_000.0,
+            shadow_projection: OrthographicProjection {
+                left: -5.0,
+                right: 5.0,
+                bottom: -5.0,
+                top: 5.0,
+                near: -1.0,
+                far: 5.0,
+                ..Default::default()
+            },
+            shadows_enabled: true,
+            ..Default::default()
+        },
+        transform: Transform {
+            translation: Vec3::new(0.0, 2.0, 0.0),
+            rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
+            ..Default::default()
+        },
+        ..Default::default()
+    });
+}
+
+fn setup_tile(
+    mut commands: Commands,
+    tile_asset_data: Res<TileAssetData>,
+    mut materials: ResMut<Assets<TileMaterial>>,
+) {
+    commands.spawn(MaterialMeshBundle {
+        mesh: tile_asset_data.get_mesh(),
+        material: materials.add(TileMaterial::new(&tile_asset_data, Dragon::Green.into())),
+        ..default()
+    });
+}
+
+fn setup_background(
+    mut commands: Commands,
+    background_asset_data: Res<BackgroundAssetData>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let mut mesh = Mesh::from(shape::Plane { size: 1.0 });
+    mesh.insert_attribute(
+        Mesh::ATTRIBUTE_UV_0,
+        vec![[25.0, 25.0], [25.0, 0.0], [0.0, 0.0], [0.0, 25.0]],
+    );
+
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(mesh),
+        material: materials.add(StandardMaterial {
+            base_color_texture: Some(background_asset_data.get_texture()),
+            perceptual_roughness: 0.8,
+            ..default()
+        }),
+        transform: Transform::from_xyz(0.0, -TileAssetData::HEIGHT / 2.0, 0.0),
+        ..default()
     });
 }
