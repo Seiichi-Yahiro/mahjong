@@ -13,7 +13,7 @@ impl Plugin for AssetsPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
             LoadingState::new(AppState::AssetLoading)
-                .continue_to_state(AppState::Menu)
+                .continue_to_state(AppState::Editor)
                 .with_collection::<BackgroundAssetData>()
                 .with_collection::<TileAssetData>(),
         )

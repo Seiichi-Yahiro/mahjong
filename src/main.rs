@@ -1,3 +1,4 @@
+mod grid;
 mod plugins;
 
 use crate::plugins::assets::background::BackgroundAssetData;
@@ -10,6 +11,7 @@ use bevy::prelude::*;
 pub enum AppState {
     AssetLoading,
     Menu,
+    Editor,
 }
 
 fn main() {
@@ -33,17 +35,16 @@ fn main() {
         .add_startup_system(setup_light)
         .add_state(AppState::AssetLoading)
         .add_plugin(plugins::assets::AssetsPlugin)
+        .add_plugin(plugins::editor::EditorPlugin)
         .add_system_set(
-            SystemSet::on_enter(AppState::Menu)
-                .with_system(setup_background)
-                .with_system(setup_tile),
+            SystemSet::on_enter(AppState::Editor).with_system(setup_background), //.with_system(setup_tile),
         )
         .run();
 }
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 0.25, 0.1)
+        transform: Transform::from_xyz(0.0, 1.2, 0.001)
             .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
         projection: PerspectiveProjection {
             near: 0.01,
@@ -65,15 +66,16 @@ fn setup_light(mut commands: Commands) {
                 bottom: -5.0,
                 top: 5.0,
                 near: -1.0,
-                far: 5.0,
+                far: 5.5,
                 ..Default::default()
             },
             shadows_enabled: true,
             ..Default::default()
         },
         transform: Transform {
-            translation: Vec3::new(0.0, 2.0, 0.0),
-            rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
+            translation: Vec3::new(0.0, 5.0, 0.5),
+            rotation: Quat::from_rotation_y(std::f32::consts::FRAC_PI_4)
+                * Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
             ..Default::default()
         },
         ..Default::default()
@@ -98,10 +100,16 @@ fn setup_background(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let mut mesh = Mesh::from(shape::Plane { size: 1.0 });
+    let mut mesh = Mesh::from(shape::Plane { size: 2.0 });
+    let number_of_repetitions = 25.0;
     mesh.insert_attribute(
         Mesh::ATTRIBUTE_UV_0,
-        vec![[25.0, 25.0], [25.0, 0.0], [0.0, 0.0], [0.0, 25.0]],
+        vec![
+            [number_of_repetitions, number_of_repetitions],
+            [number_of_repetitions, 0.0],
+            [0.0, 0.0],
+            [0.0, number_of_repetitions],
+        ],
     );
 
     commands.spawn(PbrBundle {
