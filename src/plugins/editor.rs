@@ -1,23 +1,81 @@
 use crate::grid::GridPos;
 use crate::plugins::assets::tiles::asset::TileAssetData;
-use crate::AppState;
+use crate::{AppState, Background};
 use bevy::pbr::{NotShadowCaster, NotShadowReceiver};
 use bevy::prelude::*;
-use bevy::render::camera::Viewport;
+use bevy_mod_raycast::{
+    DefaultRaycastingPlugin, Intersection, RaycastMesh, RaycastMethod, RaycastSource, RaycastSystem,
+};
 
 pub struct EditorPlugin;
 
 impl Plugin for EditorPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
-            SystemSet::on_enter(AppState::Editor).with_system(create_placeable_tile),
-        )
-        .add_system_set(
-            SystemSet::on_update(AppState::Editor)
-                .with_system(move_placeable_tile)
-                .with_system(place_tile.after(move_placeable_tile)),
-        );
+        app.add_plugin(DefaultRaycastingPlugin::<EditorRaycastSet>::default())
+            .add_system_to_stage(
+                CoreStage::First,
+                update_raycast_with_cursor.before(RaycastSystem::BuildRays::<EditorRaycastSet>),
+            )
+            .add_system_set(
+                SystemSet::on_enter(AppState::Editor)
+                    .with_system(setup_raycast)
+                    .with_system(create_placeable_tile),
+            )
+            .add_system_set(
+                SystemSet::on_update(AppState::Editor)
+                    .with_system(move_placeable_tile)
+                    .with_system(place_tile.after(move_placeable_tile)),
+            )
+            .add_system_set(SystemSet::on_exit(AppState::Editor).with_system(clean_raycast));
     }
+}
+
+struct EditorRaycastSet;
+
+fn setup_raycast(
+    mut commands: Commands,
+    camera_query: Query<Entity, With<Camera3d>>,
+    background_query: Query<Entity, With<Background>>,
+) {
+    let camera = camera_query.get_single().unwrap();
+    commands
+        .entity(camera)
+        .insert(RaycastSource::<EditorRaycastSet>::new_transform_empty());
+
+    let background = background_query.get_single().unwrap();
+    commands
+        .entity(background)
+        .insert(RaycastMesh::<EditorRaycastSet>::default());
+}
+
+fn update_raycast_with_cursor(
+    mut cursor: EventReader<CursorMoved>,
+    mut query: Query<&mut RaycastSource<EditorRaycastSet>>,
+) {
+    let cursor_position = match cursor.iter().last() {
+        Some(cursor_moved) => cursor_moved.position,
+        None => return,
+    };
+
+    for mut pick_source in &mut query {
+        pick_source.cast_method = RaycastMethod::Screenspace(cursor_position);
+    }
+}
+
+fn clean_raycast(
+    mut commands: Commands,
+    camera_query: Query<Entity, With<Camera3d>>,
+    background_query: Query<Entity, With<Background>>,
+) {
+    let camera = camera_query.get_single().unwrap();
+    commands
+        .entity(camera)
+        .remove::<RaycastSource<EditorRaycastSet>>();
+
+    let background = background_query.get_single().unwrap();
+    commands
+        .entity(background)
+        .remove::<RaycastMesh<EditorRaycastSet>>();
 }
 
 #[derive(Component)]
@@ -52,26 +110,16 @@ fn create_placeable_tile(
 
 fn move_placeable_tile(
     mut placeable_tile_query: Query<(&mut Transform, &mut GridPos), With<PlaceableTile>>,
-    camera_query: Query<(&GlobalTransform, &Camera), With<Camera3d>>,
-    windows: Res<Windows>,
+    intersections: Query<&Intersection<EditorRaycastSet>>,
 ) {
-    let (mut transform, mut grid_pos) = placeable_tile_query.get_single_mut().unwrap();
-    let (camera_transform, camera) = camera_query.get_single().unwrap();
-    let window = windows.get_primary().unwrap();
+    for intersection in intersections.iter() {
+        if let Some(intersection_pos) = intersection.position() {
+            let (mut transform, mut grid_pos) = placeable_tile_query.get_single_mut().unwrap();
 
-    if let Some(ray) = window
-        .cursor_position()
-        .and_then(|cursor_pos| camera.viewport_to_world(camera_transform, cursor_pos))
-    {
-        let plane_normal = Vec3::Y; // TODO get data from background
-        let plane_pos = Vec3::new(0.0, -TileAssetData::HEIGHT / 2.0, 0.0);
-        let lambda = (plane_pos - ray.origin).dot(plane_normal) / ray.direction.dot(plane_normal);
-
-        let pos =
-            ray.origin + ray.direction * lambda + Vec3::new(0.0, TileAssetData::HEIGHT / 2.0, 0.0);
-
-        *grid_pos = GridPos::from_world(pos);
-        transform.translation = grid_pos.to_world();
+            let pos = *intersection_pos + Vec3::new(0.0, TileAssetData::HEIGHT / 2.0, 0.0);
+            *grid_pos = GridPos::from_world(pos);
+            transform.translation = grid_pos.to_world();
+        }
     }
 }
 

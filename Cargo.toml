@@ -9,3 +9,4 @@ edition = "2021"
 [dependencies]
 bevy = "0.9.1"
 bevy_asset_loader = "0.14.1"
+bevy_mod_raycast = "0.7.0"
