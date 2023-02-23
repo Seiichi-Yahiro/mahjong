@@ -21,9 +21,9 @@ const MAX_Z: f32 = HALF_GRID_SIZE - HALF_TILE_DEPTH;
 
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Hash, Component)]
 pub struct GridPos {
-    x: i32,
-    y: u32,
-    z: i32,
+    pub x: i32,
+    pub y: u32,
+    pub z: i32,
 }
 
 impl GridPos {

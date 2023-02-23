@@ -111,6 +111,7 @@ fn create_placeable_tile(
 fn move_placeable_tile(
     mut placeable_tile_query: Query<(&mut Transform, &mut GridPos), With<PlaceableTile>>,
     intersections: Query<&Intersection<EditorRaycastSet>>,
+    grid: Res<Grid>,
 ) {
     for intersection in intersections.iter() {
         if let Some(intersection_pos) = intersection.position() {
@@ -118,6 +119,11 @@ fn move_placeable_tile(
 
             let pos = *intersection_pos + Vec3::new(0.0, TileAssetData::HEIGHT / 2.0, 0.0);
             *grid_pos = GridPos::from_world(pos);
+
+            while grid.is_overlapping(*grid_pos) {
+                grid_pos.y += 1;
+            }
+
             transform.translation = grid_pos.to_world();
         }
     }
