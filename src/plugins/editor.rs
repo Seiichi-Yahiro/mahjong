@@ -1,4 +1,4 @@
-use crate::grid::GridPos;
+use crate::grid::{Grid, GridPos};
 use crate::plugins::assets::tiles::asset::TileAssetData;
 use crate::{AppState, Background};
 use bevy::pbr::{NotShadowCaster, NotShadowReceiver};
@@ -129,12 +129,19 @@ fn place_tile(
     tile_asset_data: Res<TileAssetData>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     placeable_tile_query: Query<&GridPos, With<PlaceableTile>>,
+    mut grid: ResMut<Grid>,
 ) {
     if !mouse_button_input.just_pressed(MouseButton::Left) {
         return;
     }
 
     let grid_pos = placeable_tile_query.get_single().unwrap();
+
+    if grid.is_overlapping(*grid_pos) {
+        return;
+    }
+
+    grid.insert(*grid_pos);
 
     let pbr = PbrBundle {
         mesh: tile_asset_data.get_mesh(),

@@ -1,6 +1,7 @@
 mod grid;
 mod plugins;
 
+use crate::grid::Grid;
 use crate::plugins::assets::background::BackgroundAssetData;
 use crate::plugins::assets::tiles::asset::{TileAssetData, TileMaterial};
 use crate::plugins::assets::tiles::honor::Dragon;
@@ -34,6 +35,7 @@ fn main() {
         .add_startup_system(setup_camera)
         .add_startup_system(setup_light)
         .add_state(AppState::AssetLoading)
+        .insert_resource(Grid::new())
         .add_plugin(plugins::assets::AssetsPlugin)
         .add_plugin(plugins::editor::EditorPlugin)
         .add_system_set(
