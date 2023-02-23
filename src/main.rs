@@ -59,6 +59,11 @@ fn setup_camera(mut commands: Commands) {
 }
 
 fn setup_light(mut commands: Commands) {
+    commands.insert_resource(AmbientLight {
+        brightness: 0.2,
+        ..default()
+    });
+
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             illuminance: 32_000.0,
