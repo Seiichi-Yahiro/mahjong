@@ -13,7 +13,7 @@ const CELL_HEIGHT: f32 = TileAssetData::HEIGHT;
 const HALF_CELL_WIDTH: f32 = CELL_WIDTH / 2.0;
 const HALF_CELL_DEPTH: f32 = CELL_DEPTH / 2.0;
 
-const GRID_SIZE: f32 = 1.0;
+const GRID_SIZE: f32 = 0.7;
 const HALF_GRID_SIZE: f32 = GRID_SIZE / 2.0;
 
 const MAX_X: f32 = HALF_GRID_SIZE - HALF_TILE_WIDTH;

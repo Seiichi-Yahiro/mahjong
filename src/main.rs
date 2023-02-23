@@ -7,6 +7,7 @@ use crate::plugins::assets::tiles::asset::{TileAssetData, TileMaterial};
 use crate::plugins::assets::tiles::honor::Dragon;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum AppState {
@@ -32,6 +33,7 @@ fn main() {
                     level: bevy::log::Level::DEBUG,
                 }),
         )
+        .add_plugin(WorldInspectorPlugin)
         .add_startup_system(setup_camera)
         .add_startup_system(setup_light)
         .add_state(AppState::AssetLoading)
@@ -46,8 +48,12 @@ fn main() {
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 1.2, 0.001)
-            .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
+        transform: Transform {
+            translation: Vec3::new(0.0, 0.8, 0.15),
+            rotation: Quat::from_rotation_x(-1.4),
+            ..default()
+        }
+        .looking_at(Vec3::ZERO, Vec3::Y),
         projection: PerspectiveProjection {
             near: 0.01,
             far: 10.0,
@@ -68,24 +74,24 @@ fn setup_light(mut commands: Commands) {
         directional_light: DirectionalLight {
             illuminance: 32_000.0,
             shadow_projection: OrthographicProjection {
-                left: -5.0,
-                right: 5.0,
-                bottom: -5.0,
-                top: 5.0,
-                near: -1.0,
-                far: 5.5,
-                ..Default::default()
+                left: -1.0,
+                right: 1.0,
+                bottom: -1.0,
+                top: 1.0,
+                near: 0.01,
+                far: 5.0,
+                ..default()
             },
             shadows_enabled: true,
-            ..Default::default()
+            ..default()
         },
         transform: Transform {
-            translation: Vec3::new(0.0, 5.0, 0.5),
+            translation: Vec3::new(1.0, 2.0, 1.0),
             rotation: Quat::from_rotation_y(std::f32::consts::FRAC_PI_4)
                 * Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
-            ..Default::default()
+            ..default()
         },
-        ..Default::default()
+        ..default()
     });
 }
 
@@ -110,7 +116,7 @@ fn setup_background(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let mut mesh = Mesh::from(shape::Plane { size: 2.0 });
+    let mut mesh = Mesh::from(shape::Plane { size: 0.7 });
     let number_of_repetitions = 25.0;
     mesh.insert_attribute(
         Mesh::ATTRIBUTE_UV_0,
