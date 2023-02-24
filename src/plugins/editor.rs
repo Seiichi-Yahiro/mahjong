@@ -1,4 +1,4 @@
-use crate::grid::{Grid, GridPos};
+use crate::grid::Grid3D;
 use crate::plugins::assets::tiles::asset::TileAssetData;
 use crate::{AppState, Background};
 use bevy::pbr::{NotShadowCaster, NotShadowReceiver};
@@ -103,28 +103,20 @@ fn create_placeable_tile(
     commands
         .spawn(pbr)
         .insert(PlaceableTile)
-        .insert(GridPos::default())
         .insert(NotShadowCaster)
         .insert(NotShadowReceiver);
 }
 
 fn move_placeable_tile(
-    mut placeable_tile_query: Query<(&mut Transform, &mut GridPos), With<PlaceableTile>>,
+    mut placeable_tile_query: Query<&mut Transform, With<PlaceableTile>>,
     intersections: Query<&Intersection<EditorRaycastSet>>,
-    grid: Res<Grid>,
+    grid: Res<Grid3D>,
 ) {
     for intersection in intersections.iter() {
         if let Some(intersection_pos) = intersection.position() {
-            let (mut transform, mut grid_pos) = placeable_tile_query.get_single_mut().unwrap();
-
-            let pos = *intersection_pos + Vec3::new(0.0, TileAssetData::HEIGHT / 2.0, 0.0);
-            *grid_pos = GridPos::from_world(pos);
-
-            while grid.is_overlapping(*grid_pos) {
-                grid_pos.y += 1;
-            }
-
-            transform.translation = grid_pos.to_world();
+            let mut transform = placeable_tile_query.get_single_mut().unwrap();
+            let bias = Vec3::new(0.0, 0.0001, 0.0);
+            transform.translation = grid.snap_world_pos_to_grid(*intersection_pos + bias);
         }
     }
 }
@@ -134,27 +126,27 @@ fn place_tile(
     mouse_button_input: Res<Input<MouseButton>>,
     tile_asset_data: Res<TileAssetData>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    placeable_tile_query: Query<&GridPos, With<PlaceableTile>>,
-    mut grid: ResMut<Grid>,
+    placeable_tile_query: Query<&Transform, With<PlaceableTile>>,
+    mut grid: ResMut<Grid3D>,
 ) {
     if !mouse_button_input.just_pressed(MouseButton::Left) {
         return;
     }
 
-    let grid_pos = placeable_tile_query.get_single().unwrap();
+    let transform = placeable_tile_query.get_single().unwrap();
 
-    if grid.is_overlapping(*grid_pos) {
+    if !grid.insert_from_world(transform.translation) {
         return;
     }
-
-    grid.insert(*grid_pos);
 
     let pbr = PbrBundle {
         mesh: tile_asset_data.get_mesh(),
         material: materials.add(StandardMaterial::from(tile_asset_data.get_mesh_texture())),
-        transform: Transform::from_translation(grid_pos.to_world()),
+        transform: *transform,
         ..default()
     };
 
-    commands.spawn(pbr).insert(*grid_pos);
+    commands
+        .spawn(pbr)
+        .insert(RaycastMesh::<EditorRaycastSet>::default());
 }

@@ -1,10 +1,9 @@
 mod grid;
 mod plugins;
 
-use crate::grid::Grid;
+use crate::grid::Grid3D;
 use crate::plugins::assets::background::BackgroundAssetData;
-use crate::plugins::assets::tiles::asset::{TileAssetData, TileMaterial};
-use crate::plugins::assets::tiles::honor::Dragon;
+use crate::plugins::assets::tiles::asset::TileAssetData;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -37,12 +36,19 @@ fn main() {
         .add_startup_system(setup_camera)
         .add_startup_system(setup_light)
         .add_state(AppState::AssetLoading)
-        .insert_resource(Grid::new())
+        .insert_resource(Grid3D::new(
+            Vec3::new(
+                TileAssetData::WIDTH,
+                TileAssetData::HEIGHT,
+                TileAssetData::DEPTH,
+            ),
+            UVec3::new(1, 0, 1),
+            Some(IVec3::new(-10, 0, -7)),
+            Some(IVec3::new(10, 5, 7)),
+        ))
         .add_plugin(plugins::assets::AssetsPlugin)
         .add_plugin(plugins::editor::EditorPlugin)
-        .add_system_set(
-            SystemSet::on_exit(AppState::AssetLoading).with_system(setup_background), //.with_system(setup_tile),
-        )
+        .add_system_set(SystemSet::on_exit(AppState::AssetLoading).with_system(setup_background))
         .run();
 }
 
@@ -91,18 +97,6 @@ fn setup_light(mut commands: Commands) {
                 * Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
             ..default()
         },
-        ..default()
-    });
-}
-
-fn setup_tile(
-    mut commands: Commands,
-    tile_asset_data: Res<TileAssetData>,
-    mut materials: ResMut<Assets<TileMaterial>>,
-) {
-    commands.spawn(MaterialMeshBundle {
-        mesh: tile_asset_data.get_mesh(),
-        material: materials.add(TileMaterial::new(&tile_asset_data, Dragon::Green.into())),
         ..default()
     });
 }
