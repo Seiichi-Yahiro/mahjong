@@ -27,9 +27,12 @@ impl Plugin for EditorPlugin {
                     .with_system(move_placeable_tile)
                     .with_system(place_tile.after(move_placeable_tile)),
             )
-            .add_system_set(SystemSet::on_exit(AppState::Editor).with_system(clean_raycast));
+            .add_system_set(SystemSet::on_exit(AppState::Editor).with_system(cleanup));
     }
 }
+
+#[derive(Component)]
+struct EditorEntity;
 
 struct EditorRaycastSet;
 
@@ -84,7 +87,8 @@ fn setup_raycast(
         })
         .insert(RaycastMesh::<EditorRaycastSet>::default())
         .insert(NotShadowReceiver)
-        .insert(NotShadowCaster);
+        .insert(NotShadowCaster)
+        .insert(EditorEntity);
 }
 
 fn update_raycast_with_cursor(
@@ -101,11 +105,19 @@ fn update_raycast_with_cursor(
     }
 }
 
-fn clean_raycast(mut commands: Commands, camera_query: Query<Entity, With<Camera3d>>) {
+fn cleanup(
+    mut commands: Commands,
+    camera_query: Query<Entity, With<Camera3d>>,
+    editor_entity_query: Query<Entity, With<EditorEntity>>,
+) {
     let camera = camera_query.get_single().unwrap();
     commands
         .entity(camera)
         .remove::<RaycastSource<EditorRaycastSet>>();
+
+    for entity in editor_entity_query.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
 }
 
 #[derive(Component)]
@@ -134,7 +146,8 @@ fn create_placeable_tile(
         .spawn(pbr)
         .insert(PlaceableTile)
         .insert(NotShadowCaster)
-        .insert(NotShadowReceiver);
+        .insert(NotShadowReceiver)
+        .insert(EditorEntity);
 }
 
 fn move_placeable_tile(
@@ -178,5 +191,6 @@ fn place_tile(
 
     commands
         .spawn(material_mesh)
-        .insert(RaycastMesh::<EditorRaycastSet>::default());
+        .insert(RaycastMesh::<EditorRaycastSet>::default())
+        .insert(EditorEntity);
 }
