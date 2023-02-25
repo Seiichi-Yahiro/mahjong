@@ -60,6 +60,18 @@ impl Grid3D {
         self.set.len()
     }
 
+    pub fn cell_size(&self) -> Vec3 {
+        self.cell_size
+    }
+
+    pub fn min(&self) -> IVec3 {
+        self.min
+    }
+
+    pub fn max(&self) -> IVec3 {
+        self.max
+    }
+
     pub fn grid_pos_from_world(&self, world_pos: Vec3) -> GridPos {
         GridPos(
             (world_pos / self.cell_size)

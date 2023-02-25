@@ -3,6 +3,7 @@ use crate::plugins::assets::tiles::asset::{TileAssetData, TileMaterial};
 use crate::{AppState, Background};
 use bevy::pbr::{NotShadowCaster, NotShadowReceiver};
 use bevy::prelude::*;
+use bevy::render::mesh::{Indices, PrimitiveTopology};
 use bevy_mod_raycast::{
     DefaultRaycastingPlugin, Intersection, RaycastMesh, RaycastMethod, RaycastSource, RaycastSystem,
 };
@@ -35,17 +36,55 @@ struct EditorRaycastSet;
 fn setup_raycast(
     mut commands: Commands,
     camera_query: Query<Entity, With<Camera3d>>,
-    background_query: Query<Entity, With<Background>>,
+    background_query: Query<&Transform, With<Background>>,
+    grid: Res<Grid3D>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let camera = camera_query.get_single().unwrap();
     commands
         .entity(camera)
         .insert(RaycastSource::<EditorRaycastSet>::new_transform_empty());
 
-    let background = background_query.get_single().unwrap();
+    let background_transform = background_query.get_single().unwrap();
+    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+
+    // + and - grid_cell_size only work because x and z have a subdivision of 1
+    let min = grid.min().as_vec3() * grid.cell_size() - grid.cell_size();
+    let max = grid.max().as_vec3() * grid.cell_size() + grid.cell_size();
+
+    let top_left = Vec3::new(min.x, 0.0, min.z);
+    let bottom_right = Vec3::new(max.x, 0.0, max.z);
+    let bottom_left = Vec3::new(top_left.x, 0.0, bottom_right.z);
+    let top_right = Vec3::new(bottom_right.x, 0.0, top_left.z);
+
+    mesh.insert_attribute(
+        Mesh::ATTRIBUTE_POSITION,
+        vec![
+            top_left.to_array(),
+            bottom_left.to_array(),
+            top_right.to_array(),
+            bottom_right.to_array(),
+        ],
+    );
+
+    mesh.set_indices(Some(Indices::U32(vec![0, 1, 2, 2, 1, 3])));
+
     commands
-        .entity(background)
-        .insert(RaycastMesh::<EditorRaycastSet>::default());
+        .spawn(PbrBundle {
+            mesh: meshes.add(mesh),
+            material: materials.add(StandardMaterial {
+                base_color: Color::rgba(0.0, 0.0, 0.0, 0.20),
+                unlit: true,
+                alpha_mode: AlphaMode::Blend,
+                ..default()
+            }),
+            transform: Transform::from_xyz(0.0, background_transform.translation.y + 0.0001, 0.0),
+            ..default()
+        })
+        .insert(RaycastMesh::<EditorRaycastSet>::default())
+        .insert(NotShadowReceiver)
+        .insert(NotShadowCaster);
 }
 
 fn update_raycast_with_cursor(
@@ -62,20 +101,11 @@ fn update_raycast_with_cursor(
     }
 }
 
-fn clean_raycast(
-    mut commands: Commands,
-    camera_query: Query<Entity, With<Camera3d>>,
-    background_query: Query<Entity, With<Background>>,
-) {
+fn clean_raycast(mut commands: Commands, camera_query: Query<Entity, With<Camera3d>>) {
     let camera = camera_query.get_single().unwrap();
     commands
         .entity(camera)
         .remove::<RaycastSource<EditorRaycastSet>>();
-
-    let background = background_query.get_single().unwrap();
-    commands
-        .entity(background)
-        .remove::<RaycastMesh<EditorRaycastSet>>();
 }
 
 #[derive(Component)]
@@ -87,7 +117,7 @@ fn create_placeable_tile(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let material = StandardMaterial {
-        base_color: Color::rgba(1.0, 1.0, 1.0, 0.3),
+        base_color: Color::rgba(1.0, 1.0, 1.0, 0.4),
         base_color_texture: Some(tile_asset_data.get_mesh_texture()),
         perceptual_roughness: 1.0,
         alpha_mode: AlphaMode::Blend,

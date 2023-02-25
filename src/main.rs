@@ -5,6 +5,7 @@ use crate::grid::Grid3D;
 use crate::plugins::assets::background::BackgroundAssetData;
 use crate::plugins::assets::tiles::asset::TileAssetData;
 use bevy::log::LogPlugin;
+use bevy::pbr::NotShadowCaster;
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
@@ -110,7 +111,7 @@ fn setup_background(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let mut mesh = Mesh::from(shape::Plane { size: 0.7 });
+    let mut mesh = Mesh::from(shape::Plane { size: 1.5 });
     let number_of_repetitions = 25.0;
     mesh.insert_attribute(
         Mesh::ATTRIBUTE_UV_0,
@@ -133,5 +134,6 @@ fn setup_background(
             transform: Transform::from_xyz(0.0, -TileAssetData::HEIGHT / 2.0, 0.0),
             ..default()
         })
-        .insert(Background);
+        .insert(Background)
+        .insert(NotShadowCaster);
 }
