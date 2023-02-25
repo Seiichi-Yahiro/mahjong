@@ -27,19 +27,24 @@ struct FragmentInput {
 
 @fragment
 fn fragment(in: FragmentInput) -> @location(0) vec4<f32> {
-
+    let cover_roughness: f32 = 0.7;
+    let tile_roughness: f32 = 0.15;
     // Prepare a 'processed' StandardMaterial by sampling all textures to resolve
     // the material members
     var pbr_input: PbrInput = pbr_input_new();
 
-    var cover_color = textureSample(cover_texture, cover_texture_sampler, in.uv / vec2(0.4), cover_id);
-    var tile_color = textureSample(mesh_texture, mesh_texture_sampler, in.uv);
+    let tile_color = textureSample(mesh_texture, mesh_texture_sampler, in.uv);
 
-    var base_color = cover_color.w * cover_color.xyz + (1.0 - cover_color.w) * tile_color.xyz;
-    pbr_input.material.base_color = vec4(base_color, 0.0);
+    if (cover_id >= 0) {
+        let cover_color = textureSample(cover_texture, cover_texture_sampler, in.uv / vec2(0.4), cover_id);
+        let base_color = mix(tile_color.xyz, cover_color.xyz, cover_color.w);
 
-    pbr_input.material.perceptual_roughness = cover_color.w * 0.7 + (1.0 - cover_color.w) * 0.15;
-
+        pbr_input.material.base_color = vec4(base_color, 0.0);
+        pbr_input.material.perceptual_roughness = mix(tile_roughness, cover_roughness, cover_color.w);
+    } else {
+        pbr_input.material.base_color = tile_color;
+        pbr_input.material.perceptual_roughness = tile_roughness;
+    }
 
 #ifdef VERTEX_COLORS
     pbr_input.material.base_color = pbr_input.material.base_color * in.color;

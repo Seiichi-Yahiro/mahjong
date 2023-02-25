@@ -71,4 +71,12 @@ impl TileMaterial {
             cover_id: tile.cover_id(),
         }
     }
+
+    pub fn new_without_cover(tile_asset_data: &TileAssetData) -> Self {
+        Self {
+            mesh_texture: tile_asset_data.get_mesh_texture(),
+            cover_texture: tile_asset_data.get_cover_texture(),
+            cover_id: -1,
+        }
+    }
 }

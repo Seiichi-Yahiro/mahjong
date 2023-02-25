@@ -1,5 +1,5 @@
 use crate::grid::Grid3D;
-use crate::plugins::assets::tiles::asset::TileAssetData;
+use crate::plugins::assets::tiles::asset::{TileAssetData, TileMaterial};
 use crate::{AppState, Background};
 use bevy::pbr::{NotShadowCaster, NotShadowReceiver};
 use bevy::prelude::*;
@@ -125,7 +125,7 @@ fn place_tile(
     mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
     tile_asset_data: Res<TileAssetData>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut materials: ResMut<Assets<TileMaterial>>,
     placeable_tile_query: Query<&Transform, With<PlaceableTile>>,
     mut grid: ResMut<Grid3D>,
 ) {
@@ -139,14 +139,14 @@ fn place_tile(
         return;
     }
 
-    let pbr = PbrBundle {
+    let material_mesh = MaterialMeshBundle {
         mesh: tile_asset_data.get_mesh(),
-        material: materials.add(StandardMaterial::from(tile_asset_data.get_mesh_texture())),
+        material: materials.add(TileMaterial::new_without_cover(&tile_asset_data)),
         transform: *transform,
         ..default()
     };
 
     commands
-        .spawn(pbr)
+        .spawn(material_mesh)
         .insert(RaycastMesh::<EditorRaycastSet>::default());
 }
