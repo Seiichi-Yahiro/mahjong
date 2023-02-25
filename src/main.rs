@@ -81,10 +81,10 @@ fn setup_light(mut commands: Commands) {
         directional_light: DirectionalLight {
             illuminance: 32_000.0,
             shadow_projection: OrthographicProjection {
-                left: -1.0,
-                right: 1.0,
-                bottom: -1.0,
-                top: 1.0,
+                left: -0.5,
+                right: 0.5,
+                bottom: -0.8,
+                top: 0.0,
                 near: 0.01,
                 far: 5.0,
                 ..default()
