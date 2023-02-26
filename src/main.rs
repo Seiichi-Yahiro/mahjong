@@ -55,12 +55,7 @@ fn main() {
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera3dBundle {
-        transform: Transform {
-            translation: Vec3::new(0.0, 0.8, 0.15),
-            rotation: Quat::from_rotation_x(-1.4),
-            ..default()
-        }
-        .looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(0.0, 0.8, 0.15).looking_at(Vec3::ZERO, Vec3::Y),
         projection: PerspectiveProjection {
             near: 0.01,
             far: 10.0,
