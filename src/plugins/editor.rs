@@ -151,15 +151,19 @@ fn create_placeable_tile(
 }
 
 fn move_placeable_tile(
-    mut placeable_tile_query: Query<&mut Transform, With<PlaceableTile>>,
+    mut placeable_tile_query: Query<(&mut Transform, &mut Visibility), With<PlaceableTile>>,
     intersections: Query<&Intersection<EditorRaycastSet>>,
     grid: Res<Grid3D>,
 ) {
+    let (mut transform, mut visibility) = placeable_tile_query.get_single_mut().unwrap();
+
     for intersection in intersections.iter() {
         if let Some(intersection_pos) = intersection.position() {
-            let mut transform = placeable_tile_query.get_single_mut().unwrap();
             let bias = Vec3::new(0.0, 0.0001, 0.0);
             transform.translation = grid.snap_world_pos_to_grid(*intersection_pos + bias);
+            visibility.is_visible = true;
+        } else {
+            visibility.is_visible = false;
         }
     }
 }
@@ -169,16 +173,16 @@ fn place_tile(
     mouse_button_input: Res<Input<MouseButton>>,
     tile_asset_data: Res<TileAssetData>,
     mut materials: ResMut<Assets<TileMaterial>>,
-    placeable_tile_query: Query<&Transform, With<PlaceableTile>>,
+    placeable_tile_query: Query<(&Transform, &Visibility), With<PlaceableTile>>,
     mut grid: ResMut<Grid3D>,
 ) {
     if !mouse_button_input.just_pressed(MouseButton::Left) {
         return;
     }
 
-    let transform = placeable_tile_query.get_single().unwrap();
+    let (transform, visibility) = placeable_tile_query.get_single().unwrap();
 
-    if !grid.insert_from_world(transform.translation) {
+    if !visibility.is_visible || !grid.insert_from_world(transform.translation) {
         return;
     }
 
