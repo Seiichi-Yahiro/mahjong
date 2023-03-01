@@ -139,6 +139,7 @@ fn create_placeable_tile(
     let pbr = PbrBundle {
         mesh: tile_asset_data.get_mesh(),
         material: materials.add(material),
+        visibility: Visibility::INVISIBLE,
         ..default()
     };
 
