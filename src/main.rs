@@ -1,3 +1,4 @@
+mod colors;
 mod grid;
 mod plugins;
 
@@ -13,6 +14,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 pub enum AppState {
     AssetLoading,
     Menu,
+    Play,
     Editor,
 }
 
@@ -48,6 +50,7 @@ fn main() {
             Some(IVec3::new(10, 5, 7)),
         ))
         .add_plugin(plugins::assets::AssetsPlugin)
+        .add_plugin(plugins::menu::MenuPlugin)
         .add_plugin(plugins::editor::EditorPlugin)
         .add_system_set(SystemSet::on_exit(AppState::AssetLoading).with_system(setup_background))
         .run();
