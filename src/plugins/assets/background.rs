@@ -7,9 +7,7 @@ pub struct BackgroundPlugin;
 
 impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
-            SystemSet::on_exit(AppState::AssetLoading).with_system(repeat_background_texture),
-        );
+        app.add_system(repeat_background_texture.in_schedule(OnExit(AppState::AssetLoading)));
     }
 }
 

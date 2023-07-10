@@ -14,12 +14,11 @@ pub struct AssetsPlugin;
 impl Plugin for AssetsPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            LoadingState::new(AppState::AssetLoading)
-                .continue_to_state(AppState::Menu)
-                .with_collection::<BackgroundAssetData>()
-                .with_collection::<TileAssetData>()
-                .with_collection::<Fonts>(),
+            LoadingState::new(AppState::AssetLoading).continue_to_state(AppState::Menu),
         )
+        .add_collection_to_loading_state::<_, BackgroundAssetData>(AppState::AssetLoading)
+        .add_collection_to_loading_state::<_, TileAssetData>(AppState::AssetLoading)
+        .add_collection_to_loading_state::<_, Fonts>(AppState::AssetLoading)
         .add_plugin(background::BackgroundPlugin)
         .add_plugin(tiles::TilesPlugin);
     }

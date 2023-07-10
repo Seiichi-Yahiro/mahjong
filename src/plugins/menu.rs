@@ -8,9 +8,9 @@ pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(AppState::Menu).with_system(setup_ui))
-            .add_system_set(SystemSet::on_update(AppState::Menu).with_system(button_interaction))
-            .add_system_set(SystemSet::on_exit(AppState::Menu).with_system(cleanup));
+        app.add_system(setup_ui.in_schedule(OnEnter(AppState::Menu)))
+            .add_system(button_interaction.in_set(OnUpdate(AppState::Menu)))
+            .add_system(cleanup.in_schedule(OnExit(AppState::Menu)));
     }
 }
 
@@ -97,7 +97,7 @@ fn button_interaction(
         (&mut BackgroundColor, &Interaction, &ButtonType),
         (With<Button>, Changed<Interaction>),
     >,
-    mut state: ResMut<State<AppState>>,
+    mut state: ResMut<NextState<AppState>>,
     mut exit_events: EventWriter<AppExit>,
 ) {
     for (mut background_color, interaction, button_type) in button_query.iter_mut() {
@@ -107,10 +107,10 @@ fn button_interaction(
 
                 match *button_type {
                     ButtonType::Play => {
-                        state.set(AppState::Play).unwrap();
+                        state.set(AppState::Play);
                     }
                     ButtonType::Editor => {
-                        state.set(AppState::Editor).unwrap();
+                        state.set(AppState::Editor);
                     }
                     ButtonType::Exit => exit_events.send_default(),
                 }

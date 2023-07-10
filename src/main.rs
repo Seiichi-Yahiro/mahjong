@@ -6,12 +6,13 @@ use crate::grid::Grid3D;
 use crate::plugins::assets::background::BackgroundAssetData;
 use crate::plugins::assets::tiles::asset::TileAssetData;
 use bevy::log::LogPlugin;
-use bevy::pbr::NotShadowCaster;
+use bevy::pbr::{CascadeShadowConfigBuilder, DirectionalLightShadowMap, NotShadowCaster};
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Default, Debug, Copy, Clone, Eq, PartialEq, Hash, States)]
 pub enum AppState {
+    #[default]
     AssetLoading,
     Menu,
     Play,
@@ -20,14 +21,14 @@ pub enum AppState {
 
 fn main() {
     App::new()
-        .insert_resource(Msaa { samples: 4 })
+        .insert_resource(Msaa::Sample4)
         .add_plugins(
             DefaultPlugins
                 .set(WindowPlugin {
-                    window: WindowDescriptor {
+                    primary_window: Some(Window {
                         title: "Mahjong".to_string(),
                         ..default()
-                    },
+                    }),
                     ..default()
                 })
                 .set(LogPlugin {
@@ -35,10 +36,11 @@ fn main() {
                     level: bevy::log::Level::DEBUG,
                 }),
         )
-        .add_plugin(WorldInspectorPlugin)
+        .insert_resource(DirectionalLightShadowMap { size: 2048 * 2 })
+        .add_plugin(WorldInspectorPlugin::new())
         .add_startup_system(setup_camera)
         .add_startup_system(setup_light)
-        .add_state(AppState::AssetLoading)
+        .add_state::<AppState>()
         .insert_resource(Grid3D::new(
             Vec3::new(
                 TileAssetData::WIDTH,
@@ -52,7 +54,7 @@ fn main() {
         .add_plugin(plugins::assets::AssetsPlugin)
         .add_plugin(plugins::menu::MenuPlugin)
         .add_plugin(plugins::editor::EditorPlugin)
-        .add_system_set(SystemSet::on_exit(AppState::AssetLoading).with_system(setup_background))
+        .add_system(setup_background.in_schedule(OnExit(AppState::AssetLoading)))
         .run();
 }
 
@@ -78,18 +80,17 @@ fn setup_light(mut commands: Commands) {
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             illuminance: 32_000.0,
-            shadow_projection: OrthographicProjection {
-                left: -0.5,
-                right: 0.5,
-                bottom: -0.8,
-                top: 0.0,
-                near: 0.01,
-                far: 5.0,
-                ..default()
-            },
             shadows_enabled: true,
             ..default()
         },
+        cascade_shadow_config: CascadeShadowConfigBuilder {
+            num_cascades: 4,
+            maximum_distance: 1.0,
+            minimum_distance: 0.1,
+            first_cascade_far_bound: 0.2,
+            ..default()
+        }
+        .into(),
         transform: Transform {
             translation: Vec3::new(1.0, 2.0, 1.0),
             rotation: Quat::from_rotation_y(std::f32::consts::FRAC_PI_4)
@@ -109,15 +110,16 @@ fn setup_background(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let mut mesh = Mesh::from(shape::Plane { size: 1.5 });
+    let mut mesh = Mesh::from(shape::Plane::from_size(1.5));
     let number_of_repetitions = 25.0;
+
     mesh.insert_attribute(
         Mesh::ATTRIBUTE_UV_0,
         vec![
-            [number_of_repetitions, number_of_repetitions],
-            [number_of_repetitions, 0.0],
-            [0.0, 0.0],
             [0.0, number_of_repetitions],
+            [number_of_repetitions, number_of_repetitions],
+            [0.0, 0.0],
+            [number_of_repetitions, 0.0],
         ],
     );
 

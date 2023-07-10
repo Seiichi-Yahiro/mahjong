@@ -13,27 +13,27 @@ pub struct EditorPlugin;
 impl Plugin for EditorPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(DefaultRaycastingPlugin::<EditorRaycastSet>::default())
-            .add_system_to_stage(
-                CoreStage::First,
-                update_raycast_with_cursor.before(RaycastSystem::BuildRays::<EditorRaycastSet>),
+            .add_system(
+                update_raycast_with_cursor
+                    .in_base_set(CoreSet::First)
+                    .before(RaycastSystem::BuildRays::<EditorRaycastSet>),
             )
-            .add_system_set(
-                SystemSet::on_enter(AppState::Editor)
-                    .with_system(setup_raycast)
-                    .with_system(create_placeable_tile),
+            .add_systems(
+                (setup_raycast, create_placeable_tile).in_schedule(OnEnter(AppState::Editor)),
             )
-            .add_system_set(
-                SystemSet::on_update(AppState::Editor)
-                    .with_system(move_placeable_tile)
-                    .with_system(place_tile.after(move_placeable_tile)),
+            .add_systems(
+                (move_placeable_tile, place_tile)
+                    .chain()
+                    .in_set(OnUpdate(AppState::Editor)),
             )
-            .add_system_set(SystemSet::on_exit(AppState::Editor).with_system(cleanup));
+            .add_system(cleanup.in_schedule(OnExit(AppState::Editor)));
     }
 }
 
 #[derive(Component)]
 struct EditorEntity;
 
+#[derive(Clone, Reflect)]
 struct EditorRaycastSet;
 
 fn setup_raycast(
@@ -139,7 +139,7 @@ fn create_placeable_tile(
     let pbr = PbrBundle {
         mesh: tile_asset_data.get_mesh(),
         material: materials.add(material),
-        visibility: Visibility::INVISIBLE,
+        visibility: Visibility::Hidden,
         ..default()
     };
 
@@ -162,9 +162,9 @@ fn move_placeable_tile(
         if let Some(intersection_pos) = intersection.position() {
             let bias = Vec3::new(0.0, 0.0001, 0.0);
             transform.translation = grid.snap_world_pos_to_grid(*intersection_pos + bias);
-            visibility.is_visible = true;
+            *visibility = Visibility::Visible;
         } else {
-            visibility.is_visible = false;
+            *visibility = Visibility::Hidden;
         }
     }
 }
@@ -183,7 +183,7 @@ fn place_tile(
 
     let (transform, visibility) = placeable_tile_query.get_single().unwrap();
 
-    if !visibility.is_visible || !grid.insert_from_world(transform.translation) {
+    if visibility == Visibility::Hidden || !grid.insert_from_world(transform.translation) {
         return;
     }
 

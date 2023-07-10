@@ -13,9 +13,8 @@ pub struct TilesPlugin;
 impl Plugin for TilesPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(MaterialPlugin::<TileMaterial>::default())
-            .add_system_set(
-                SystemSet::on_exit(AppState::AssetLoading)
-                    .with_system(reinterpret_cover_texture_as_2d_array),
+            .add_system(
+                reinterpret_cover_texture_as_2d_array.in_schedule(OnExit(AppState::AssetLoading)),
             );
     }
 }
