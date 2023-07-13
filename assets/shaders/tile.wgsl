@@ -34,6 +34,7 @@ fn fragment(in: FragmentInput) -> @location(0) vec4<f32> {
     // Prepare a 'processed' StandardMaterial by sampling all textures to resolve
     // the material members
     var pbr_input: PbrInput = pbr_input_new();
+    pbr_input.flags = MESH_FLAGS_SHADOW_RECEIVER_BIT;
 
     let tile_color = textureSample(mesh_texture, mesh_texture_sampler, in.uv);
 
